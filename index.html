@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Doodle Jump</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Der Wrapper wird per JavaScript auf die Fenstergrösse skaliert (Hochformat 2:3) -->
+  <canvas id="backdrop"></canvas>
+  <div id="game-wrapper">
+    <canvas id="game"></canvas>
+
+    <!-- Kleine Knöpfe für Handy-Spieler (Desktop: Tasten P und M) -->
+    <div id="hud-buttons">
+      <button id="btn-pause" type="button" tabindex="-1" aria-label="Pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <g class="i-pause"><rect x="6" y="5" width="4.2" height="14" rx="1.5"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.5"/></g>
+          <path class="i-play" d="M8 5.5v13l11-6.5z"/>
+        </svg>
+      </button>
+      <button id="btn-mute" type="button" tabindex="-1" aria-label="Ton an/aus">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9.5h3.5L12.5 5v14l-5-4.5H4z"/>
+          <path class="i-wave" fill="none" stroke-width="2" d="M16 8.5a5 5 0 0 1 0 7M18.8 5.8a9 9 0 0 1 0 12.4"/>
+          <path class="i-x" fill="none" stroke-width="2" d="M16 9.5l5 5M21 9.5l-5 5"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Startbildschirm -->
+    <div id="screen-start" class="screen">
+      <h1>Doodle Jump</h1>
+      <p class="blink">Tippen / Leertaste zum Starten</p>
+      <p class="hint">← → oder A / D · Handy: links/rechts tippen oder kippen<br>Schild &amp; Jetpack einsammeln<br>P = Pause · M = Ton</p>
+    </div>
+
+    <!-- Pause -->
+    <div id="screen-pause" class="screen hidden">
+      <h2>Pause</h2>
+      <p class="blink">P / Tippen zum Weiterspielen</p>
+    </div>
+
+    <!-- Game Over -->
+    <div id="screen-over" class="screen hidden">
+      <h2>Game Over</h2>
+      <p class="big">Score: <span id="final-score">0</span></p>
+      <p>Highscore: <span id="final-best">0</span></p>
+      <p id="new-record" class="record hidden">★ Neuer Highscore! ★</p>
+      <button id="btn-restart" type="button">Nochmal spielen</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
