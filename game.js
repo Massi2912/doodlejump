@@ -1,5 +1,5 @@
 /* =====================================================================
-   HÜPF-KRITZEL – ein Doodle-Jump-Klon, komplett per Canvas gezeichnet
+   DOODLE JUMP – ein Doodle-Jump-Klon, komplett per Canvas gezeichnet
    Aufbau:
      1. Konstanten      (hier kannst du das Spiel leichter/schwerer machen)
      2. Hilfsfunktionen
