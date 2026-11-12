@@ -157,3 +157,67 @@ body {
 #hud-buttons .paused .i-pause { display: none; }
 #hud-buttons .muted .i-x { display: block; }
 #hud-buttons .muted .i-wave { display: none; }
+
+/* ===== Skins ===== */
+.btn-small {
+  margin-top: calc(var(--u) * 14);
+  padding: calc(var(--u) * 7) calc(var(--u) * 22);
+  font-family: inherit;
+  font-size: calc(var(--u) * 18);
+  font-weight: bold;
+  color: #2d3748;
+  background: #fff;
+  border: calc(var(--u) * 3) solid #4a5568;
+  border-radius: calc(var(--u) * 12);
+  box-shadow: 0 calc(var(--u) * 3) 0 #4a5568;
+  cursor: pointer;
+}
+.btn-small:active {
+  transform: translateY(calc(var(--u) * 2));
+  box-shadow: 0 calc(var(--u) * 1) 0 #4a5568;
+}
+
+.screen p.small { font-size: calc(var(--u) * 14); opacity: 0.8; }
+
+#screen-skins h2 { color: #3f8f2f; margin-bottom: calc(var(--u) * 8); }
+#screen-skins .skin-total { font-weight: bold; margin: 0; }
+
+#skin-bar {
+  width: calc(var(--u) * 260);
+  height: calc(var(--u) * 10);
+  margin: calc(var(--u) * 4) 0 calc(var(--u) * 14);
+  border: calc(var(--u) * 2) solid #4a5568;
+  border-radius: calc(var(--u) * 6);
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+#skin-bar-fill { height: 100%; width: 0; background: #6fcf4f; }
+
+#skin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, calc(var(--u) * 108));
+  gap: calc(var(--u) * 10);
+}
+
+.skin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 6) calc(var(--u) * 4);
+  font-family: inherit;
+  color: #2d3748;
+  background: rgba(255, 255, 255, 0.9);
+  border: calc(var(--u) * 3) solid #cbd5e0;
+  border-radius: calc(var(--u) * 12);
+  cursor: pointer;
+}
+.skin-card canvas {
+  display: block;
+  width: calc(var(--u) * 64);
+  height: calc(var(--u) * 72);
+}
+.skin-card .skin-name  { font-size: calc(var(--u) * 14); font-weight: bold; margin-top: calc(var(--u) * 2); }
+.skin-card .skin-state { font-size: calc(var(--u) * 12); opacity: 0.75; }
+.skin-card.selected { border-color: #3f8f2f; background: #eaf9e0; }
+.skin-card.locked   { cursor: default; background: rgba(226, 232, 240, 0.85); color: #718096; }
+.skin-card:not(.locked):active { transform: scale(0.96); }
