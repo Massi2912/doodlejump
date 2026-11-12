@@ -1,5 +1,5 @@
 /* =====================================================================
-   DOODLE JUMP – ein Hüpfspiel, komplett per Canvas gezeichnet
+   HÜPF-KRITZEL – ein Doodle-Jump-Klon, komplett per Canvas gezeichnet
    Aufbau:
      1. Konstanten      (hier kannst du das Spiel leichter/schwerer machen)
      2. Hilfsfunktionen
@@ -11,6 +11,7 @@
      8. Collision
      9. Draw
     10. Spielablauf & Hauptschleife
+   Skins: Liste in Abschnitt 1 (SKINS), Zeichnen in 9, Menü & Freischalten in 3/10.
    ===================================================================== */
 'use strict';
 
@@ -81,11 +82,12 @@ const SHIELD_TIME        = 10;    // Sekunden, falls vorher kein Treffer abgefan
 const INVULN_TIME        = 1.0;   // kurze Unverwundbarkeit nach einem abgefangenen Treffer
 
 // Neue Gegner
-const INKER_START_SCORE  = Infinity;  // Tintenwerfer
+const INKER_START_SCORE  = 2500;      // Tintenwerfer
 const CHASER_START_SCORE = Infinity;  // Verfolger
 const INKER_W = 40, INKER_H = 36;
 const CHASER_W = 38, CHASER_H = 34;
-const INK_SPEED = 190;
+const INK_SPEED = 200;             // Tempo des Kleckses (Pixel/Sekunde)
+const INKER_CD_MIN = 2, INKER_CD_MAX = 3.2;   // Sekunden zwischen zwei Schüssen (zählt nur, wenn sichtbar)
 
 // Boss (alle BOSS_EVERY_SCORE Punkte)
 const BOSS_EVERY_SCORE = Infinity;   // Boss noch nicht fertig
@@ -96,6 +98,31 @@ const BOSS_BONUS = 500;
 // Optik
 const GRID = 25;                 // Kästchengrösse des Schulhefts
 const MARGIN_X = 52;             // roter Rand
+
+// Skins: Alle Punkte aus allen Runden werden zusammengezählt (bleibt im Browser gespeichert).
+// 'cost' = Gesamtpunkte, ab denen der Skin freigeschaltet ist. Hier kannst du die Preise
+// ändern oder neue Skins ergänzen.   top: 'leaves' | 'ears' | 'antenna' | 'bow' | 'crown'
+// plat = Plattform-Farben [Füllung, Rand]; move = bewegliche Plattformen (optional, sonst blau)
+const SKINS = [
+  { id: 'kritzel', plat: ['#7ed957', '#3f8f2f'], name: 'Kritzel', cost: 0, top: 'leaves',
+    body: ['#c9f78f', '#79c93e'], out: '#2f6b1f', feet: '#6cba34', arm: '#a6e86b',
+    belly: 'rgba(255,255,225,0.55)', spot: 'rgba(70,140,30,0.35)', acc: '#58b82b', acc2: '#58b82b' },
+  { id: 'blaubeere', plat: ['#6fb7ff', '#2b6cb0'], move: ['#7ed957', '#3f8f2f'], name: 'Blaubeere', cost: 1000, top: 'leaves',
+    body: ['#a9d4ff', '#4d8fe0'], out: '#1f3f7a', feet: '#3f7fd0', arm: '#8fc2ff',
+    belly: 'rgba(235,245,255,0.6)', spot: 'rgba(30,70,150,0.3)', acc: '#58b82b', acc2: '#58b82b' },
+  { id: 'kater', plat: ['#ffb866', '#c2701a'], name: 'Kater Karl', cost: 3000, top: 'ears',
+    body: ['#ffd9a0', '#f0933a'], out: '#8a4a12', feet: '#e08a30', arm: '#ffc27a',
+    belly: 'rgba(255,248,225,0.7)', spot: 'rgba(170,90,20,0.3)', acc: '#f0933a', acc2: '#ffb3c1' },
+  { id: 'zuckerwatte', plat: ['#ff9ccb', '#c2407f'], name: 'Zuckerwatte', cost: 6000, top: 'bow',
+    body: ['#ffd0e6', '#f06fa8'], out: '#8c2a5b', feet: '#e0568f', arm: '#ffb0d3',
+    belly: 'rgba(255,245,250,0.7)', spot: 'rgba(170,40,100,0.28)', acc: '#7c5cff', acc2: '#ffd23f' },
+  { id: 'robo', plat: ['#b9c4d0', '#5b6878'], name: 'Robo-Bot', cost: 12000, top: 'antenna',
+    body: ['#e3e9f0', '#8e9bab'], out: '#39434f', feet: '#7a8797', arm: '#c3ccd6',
+    belly: 'rgba(100,200,255,0.55)', spot: 'rgba(40,50,60,0.3)', acc: '#ff5a5f', acc2: '#4a5568' },
+  { id: 'koenig', plat: ['#ffd84d', '#b8860b'], name: 'Königlich', cost: 25000, top: 'crown',
+    body: ['#fff0a8', '#e8b820'], out: '#8a6208', feet: '#d9a516', arm: '#ffe27a',
+    belly: 'rgba(255,252,225,0.7)', spot: 'rgba(170,120,10,0.3)', acc: '#ffd23f', acc2: '#e74c3c' }
+];
 
 /* ---------------------------------------------------------------------
    2. HILFSFUNKTIONEN
@@ -132,14 +159,15 @@ function roundedRect(x, y, w, h, r) {
    3. ZUSTAND & SETUP
    --------------------------------------------------------------------- */
 const canvas  = document.getElementById('game');
-const ctx     = canvas.getContext('2d');
+let ctx         = canvas.getContext('2d');   // 'let': wird kurz für die Skin-Vorschauen getauscht
 const wrapper = document.getElementById('game-wrapper');
 const backdrop = document.getElementById('backdrop');
 
 const screens = {
   start: document.getElementById('screen-start'),
   pause: document.getElementById('screen-pause'),
-  over:  document.getElementById('screen-over')
+  over:  document.getElementById('screen-over'),
+  skins: document.getElementById('screen-skins')
 };
 const el = {
   finalScore: document.getElementById('final-score'),
@@ -147,7 +175,17 @@ const el = {
   newRecord:  document.getElementById('new-record'),
   btnPause:   document.getElementById('btn-pause'),
   btnMute:    document.getElementById('btn-mute'),
-  btnRestart: document.getElementById('btn-restart')
+  btnRestart: document.getElementById('btn-restart'),
+  newSkin:    document.getElementById('new-skin'),
+  overProgress: document.getElementById('over-progress'),
+  btnSkins:     document.getElementById('btn-skins'),
+  btnSkinsOver: document.getElementById('btn-skins-over'),
+  btnSkinsPause: document.getElementById('btn-skins-pause'),
+  btnSkinsClose: document.getElementById('btn-skins-close'),
+  skinGrid:     document.getElementById('skin-grid'),
+  skinTotal:    document.getElementById('skin-total'),
+  skinProgress: document.getElementById('skin-progress'),
+  skinBarFill:  document.getElementById('skin-bar-fill')
 };
 
 let viewScale = 1;     // Canvas-Pixel pro logischem Pixel
@@ -162,6 +200,25 @@ function loadHighscore() {
 function saveHighscore() {
   try { localStorage.setItem('huepfKritzelHighscore', String(highscore)); }
   catch (e) { /* localStorage nicht verfügbar – egal */ }
+}
+
+/* ---- Skins: Gesamtpunkte und gewählter Skin (bleiben im Browser gespeichert) ---- */
+const TOTAL_KEY = 'huepfKritzelTotal';
+const SKIN_KEY  = 'huepfKritzelSkin';
+function storeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function storeSet(key, value) { try { localStorage.setItem(key, String(value)); } catch (e) { /* egal */ } }
+
+// Wer schon einen Highscore hat, startet nicht bei null
+let totalPoints = (() => { const v = parseInt(storeGet(TOTAL_KEY), 10); return Number.isFinite(v) ? v : highscore; })();
+const skinById      = id => SKINS.find(s => s.id === id);
+const isUnlocked    = s => totalPoints >= s.cost;
+const nextLockedSkin = () => SKINS.find(s => s.cost > totalPoints);
+let skinId = (() => { const s = skinById(storeGet(SKIN_KEY)); return s && isUnlocked(s) ? s.id : SKINS[0].id; })();
+const currentSkin = () => skinById(skinId);
+
+function progressText() {
+  const n = nextLockedSkin();
+  return n ? `Nächster Skin „${n.name}“: noch ${n.cost - totalPoints} Punkte` : 'Alle Skins freigeschaltet!';
 }
 
 /** Passt Canvas und Wrapper an das Fenster an (Seitenverhältnis 2:3 bleibt). */
@@ -206,6 +263,7 @@ function createPlayer() {
 function resetGame() {
   game = {
     state: 'start',
+    skinFrom: 'start',              // von wo das Skin-Menü geöffnet wurde
     time: 0,
     idleTime: 0,
     idlePhase: 0,
@@ -264,6 +322,7 @@ function tone(from, to, dur, type = 'sine', vol = 0.15, delay = 0) {
 
 const sfx = {
   jump:     () => tone(380, 720, 0.12, 'sine', 0.14),
+  select:   () => { tone(520, 780, 0.08, 'triangle', 0.12); tone(780, 1040, 0.1, 'triangle', 0.12, 0.07); },
   spring:   () => { tone(300, 1000, 0.28, 'square', 0.07); tone(500, 1400, 0.2, 'sine', 0.1, 0.05); },
   powerup:  () => { tone(500, 700, 0.1, 'triangle', 0.15); tone(700, 1000, 0.1, 'triangle', 0.15, 0.09); tone(1000, 1400, 0.18, 'triangle', 0.15, 0.18); },
   break:    () => tone(220, 50, 0.25, 'sawtooth', 0.1),
@@ -312,12 +371,14 @@ function onActionKey() {
 
 window.addEventListener('keydown', e => {
   initAudio();
+  if (game.state === 'skins') { handleSkinKey(e); return; }
   switch (e.code) {
     case 'ArrowLeft': case 'KeyA':  keys.left = true;  e.preventDefault(); break;
     case 'ArrowRight': case 'KeyD': keys.right = true; e.preventDefault(); break;
     case 'Space': case 'Enter':     e.preventDefault(); if (!e.repeat) onActionKey(); break;
     case 'KeyP': case 'Escape':     if (!e.repeat) togglePause(); break;
     case 'KeyM':                    if (!e.repeat) toggleMute(); break;
+    case 'KeyK':                    if (!e.repeat) openSkins(); break;
   }
 });
 window.addEventListener('keyup', e => {
@@ -376,6 +437,10 @@ function enableTilt() {
 el.btnPause.addEventListener('click', () => { togglePause(); el.btnPause.blur(); });
 el.btnMute.addEventListener('click',  () => { initAudio(); toggleMute(); el.btnMute.blur(); });
 el.btnRestart.addEventListener('click', () => { initAudio(); startGame(); });
+el.btnSkins.addEventListener('click',      () => { initAudio(); openSkins(); });
+el.btnSkinsOver.addEventListener('click',  () => { initAudio(); openSkins(); });
+el.btnSkinsPause.addEventListener('click', () => { initAudio(); openSkins(); });
+el.btnSkinsClose.addEventListener('click', () => { closeSkins(); });
 
 /* ---------------------------------------------------------------------
    6. SPAWN (Plattformen, Power-Ups, Gegner)
@@ -465,7 +530,7 @@ function spawnBreakable(y, gap) {
 
 function spawnEnemy(pl, moving, y, gap, score) {
   const kinds = ['classic', 'classic'];
-  if (score >= INKER_START_SCORE) kinds.push('inker', 'inker');
+  if (score >= INKER_START_SCORE) kinds.push('inker');
   if (score >= CHASER_START_SCORE) kinds.push('chaser');
   const kind = kinds[Math.floor(Math.random() * kinds.length)];
 
@@ -583,6 +648,8 @@ function update(dt) {
   updatePlayer(dt);
   checkPowerupPickup();
   checkEnemyCollisions();
+  updateShots(dt);
+  checkShotHits();
   updateCamera(dt);
   updateScore();
   spawnPlatforms();
@@ -620,6 +687,17 @@ function updateEnemies(dt) {
       if (e.x < 0) { e.x = 0; e.vx = Math.abs(e.vx); }
       if (e.x > W - e.w) { e.x = W - e.w; e.vx = -Math.abs(e.vx); }
       e.y = e.baseY + Math.sin(e.t * 2.2) * 12;
+    } else if (e.type === 'inker') {
+      e.x += e.vx * dt;
+      if (e.x < 0) { e.x = 0; e.vx = Math.abs(e.vx); }
+      if (e.x > W - e.w) { e.x = W - e.w; e.vx = -Math.abs(e.vx); }
+      e.y = e.baseY + Math.sin(e.t * 2) * 8;
+      // schiesst nur, wenn er im Bild ist und die Figur unter ihm ist
+      const p = game.player, sy = e.y - game.cameraY;
+      if (!p.dead && sy > 10 && sy < H * 0.7 && p.y > e.y + 30) {
+        e.cd -= dt;
+        if (e.cd <= 0) { fireInk(e.x + e.w / 2, e.y + e.h, INK_SPEED); e.cd = rand(INKER_CD_MIN, INKER_CD_MAX); }
+      }
     }
   }
 }
@@ -790,6 +868,40 @@ function checkPowerupPickup() {
   }
 }
 
+/** Tintenklekse fliegen lassen und aufräumen. */
+function updateShots(dt) {
+  for (const sh of game.shots) {
+    sh.t += dt; sh.life -= dt;
+    sh.x += sh.vx * dt; sh.y += sh.vy * dt;
+  }
+  const top = game.cameraY - 250, bottom = game.cameraY + H + 80;
+  game.shots = game.shots.filter(sh => sh.life > 0 && sh.y > top && sh.y < bottom && sh.x > -30 && sh.x < W + 30);
+}
+
+/** Klecks trifft die Figur: Schild fängt ihn ab, im Flug geht er kaputt, sonst Game Over. */
+function checkShotHits() {
+  const p = game.player;
+  if (p.dead || !game.shots.length) return;
+  const body = { x: p.x - 14, y: p.y + 4, w: 28, h: PLAYER_H - 4 };
+  for (const sh of game.shots) {
+    const nx = clamp(sh.x, body.x, body.x + body.w), ny = clamp(sh.y, body.y, body.y + body.h);
+    if (Math.hypot(sh.x - nx, sh.y - ny) > sh.r) continue;
+    if (p.invuln > 0) continue;
+    sh.life = 0;
+    spawnParticles(sh.x, sh.y, 8, ['#3a4fa8', '#2c3e7a', '#6b82d6'], 160);
+    if (p.propTimer > 0 || p.jetTimer > 0) continue;       // im Flug: Klecks geht einfach kaputt
+    if (p.shield > 0) {
+      p.shield = 0;
+      p.invuln = INVULN_TIME;
+      spawnParticles(p.x, p.y + 20, 12, ['#7ec8ff', '#ffffff', '#2b6cb0'], 240);
+      sfx.shieldBreak();
+    } else {
+      die(true);
+      return;
+    }
+  }
+}
+
 /** Von oben draufspringen = Gegner besiegt, sonst Game Over. */
 function checkEnemyCollisions() {
   const p = game.player;
@@ -833,10 +945,12 @@ function draw() {
   drawBackground();
   drawPlatforms();
   drawEnemies();
+  drawShots();
   drawParticles();
   drawPlayer();
   ctx.restore();
-  if (game.state !== 'start') drawHUD();
+  const st = game.state === 'skins' ? game.skinFrom : game.state;
+  if (st !== 'start') drawHUD();
 }
 
 /** Schulheft: Kästchen, roter Rand und Löcher – scrollt mit der Kamera. */
@@ -875,6 +989,8 @@ function drawBackground() {
 
 function drawPlatforms() {
   const cam = game.cameraY;
+  const sk = currentSkin();
+  const mv = sk.move || ['#5fb4ff', '#2b6cb0'];
   for (const pl of game.platforms) {
     const x = pl.x, y = pl.y - cam;
     if (y < -40 || y > H + 20) continue;
@@ -882,12 +998,12 @@ function drawPlatforms() {
     ctx.lineWidth = 2.5;
     ctx.lineJoin = 'round';
     if (pl.type === 'normal') {
-      ctx.fillStyle = '#7ed957'; ctx.strokeStyle = '#3f8f2f';
+      ctx.fillStyle = sk.plat[0]; ctx.strokeStyle = sk.plat[1];
       roundedRect(x, y, PLATFORM_W, PLATFORM_H, 6); ctx.fill(); ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
       roundedRect(x + 5, y + 3, PLATFORM_W - 10, 3, 1.5); ctx.fill();
     } else if (pl.type === 'moving') {
-      ctx.fillStyle = '#5fb4ff'; ctx.strokeStyle = '#2b6cb0';
+      ctx.fillStyle = mv[0]; ctx.strokeStyle = mv[1];
       roundedRect(x, y, PLATFORM_W, PLATFORM_H, 6); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#ffffff';                       // kleine Pfeile ◄ ►
       const cx = x + PLATFORM_W / 2, cy = y + PLATFORM_H / 2;
@@ -970,6 +1086,7 @@ function drawEnemies() {
   for (const e of game.enemies) {
     const x = e.x, y = e.y - cam;
     if (y < -60 || y > H + 40) continue;
+    if (e.type === 'inker') { drawInker(e, x, y); continue; }
     const bob = Math.sin(e.t * 6) * 1.5;
 
     ctx.lineWidth = 2.5;
@@ -999,6 +1116,90 @@ function drawEnemies() {
     ctx.moveTo(x + 10, y + 25); ctx.lineTo(x + 14, y + 31); ctx.lineTo(x + 18, y + 25);
     ctx.lineTo(x + 22, y + 31); ctx.lineTo(x + 26, y + 25); ctx.lineTo(x + 30, y + 31);
     ctx.stroke();
+  }
+}
+
+/** Tintenwerfer: wütende Tintenflasche mit Federkiel. Vor dem Schuss bläht er sich auf, zittert
+ *  und der Tropfen unten wird dicker (= Vorwarnung). */
+function drawInker(e, x, y) {
+  const warn = e.cd > 0 && e.cd < 0.6 ? 1 - e.cd / 0.6 : 0;
+  const p = game.player;
+  const look = clamp((p.x - (x + e.w / 2)) / 80, -1, 1);
+  const wob = Math.sin(e.t * 5) * 1.2;
+  const cx = x + e.w / 2, bottom = y + e.h;
+
+  ctx.save();
+  ctx.translate(cx + Math.sin(e.t * 70) * warn * 1.3, bottom);
+  ctx.scale(1 + warn * 0.12, 1 - warn * 0.09);       // aufblähen
+  ctx.translate(-cx, -bottom);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const OUT = '#18215a';
+
+  // Federkiel (wippt)
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = OUT; ctx.fillStyle = '#f4f6ff';
+  ctx.beginPath();
+  ctx.moveTo(cx + 3, y - 2 + wob);
+  ctx.quadraticCurveTo(cx + 20, y - 8 + wob, cx + 17, y - 24 + wob);
+  ctx.quadraticCurveTo(cx + 7, y - 17 + wob, cx + 3, y - 2 + wob);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 4, y - 3 + wob); ctx.quadraticCurveTo(cx + 12, y - 11 + wob, cx + 16, y - 22 + wob); ctx.stroke();
+
+  // Flaschenhals + Korken
+  ctx.lineWidth = 2.5;
+  ctx.fillStyle = '#4a62c8';
+  roundedRect(x + 13, y + 1, 14, 11, 3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c98a4b';
+  roundedRect(x + 11, y - 3, 18, 8, 3); ctx.fill(); ctx.stroke();
+
+  // Körper mit Farbverlauf
+  const g = ctx.createLinearGradient(0, y + 8, 0, bottom);
+  g.addColorStop(0, '#6a84ee'); g.addColorStop(1, '#2a3b98');
+  ctx.fillStyle = g;
+  roundedRect(x, y + 9, e.w, e.h - 9, 13); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';           // Glanz
+  roundedRect(x + 5, y + 15, 4.5, 11, 2.2); ctx.fill();
+  ctx.fillStyle = 'rgba(10,15,60,0.25)';              // Tinten-Pegel unten
+  ctx.beginPath(); ctx.moveTo(x + 3, y + 28); ctx.quadraticCurveTo(cx, y + 24, x + e.w - 3, y + 28);
+  ctx.lineTo(x + e.w - 5, bottom - 4); ctx.quadraticCurveTo(cx, bottom + 1, x + 5, bottom - 4); ctx.closePath(); ctx.fill();
+
+  // Augen
+  ctx.lineWidth = 2; ctx.strokeStyle = OUT; ctx.fillStyle = '#ffffff';
+  for (const ex of [x + 13.5, x + 26.5]) { ctx.beginPath(); ctx.ellipse(ex, y + 21, 5.6, 6.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = warn > 0.3 ? '#c0172b' : '#0c1238';
+  for (const ex of [x + 13.5, x + 26.5]) { ctx.beginPath(); ctx.arc(ex + look * 2.2, y + 22.5, 2.6, 0, Math.PI * 2); ctx.fill(); }
+  ctx.strokeStyle = '#0c1238'; ctx.lineWidth = 3;      // dicke, wütende Augenbrauen
+  ctx.beginPath(); ctx.moveTo(x + 6.5, y + 11.5); ctx.lineTo(x + 18, y + 16.5); ctx.moveTo(x + 33.5, y + 11.5); ctx.lineTo(x + 22, y + 16.5); ctx.stroke();
+
+  // Mund: Zackenzähne, vor dem Schuss weit offen
+  if (warn > 0.15) {
+    ctx.fillStyle = '#0c1238'; ctx.strokeStyle = OUT; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.ellipse(cx, y + 31, 6 + warn * 2, 2.5 + warn * 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#ffffff'; ctx.strokeStyle = OUT; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(cx - 9, y + 29); ctx.lineTo(cx - 6, y + 33.5); ctx.lineTo(cx - 3, y + 29); ctx.lineTo(cx, y + 33.5);
+    ctx.lineTo(cx + 3, y + 29); ctx.lineTo(cx + 6, y + 33.5); ctx.lineTo(cx + 9, y + 29);
+    ctx.stroke();
+  }
+
+  // Tropfen
+  ctx.fillStyle = '#26358c'; ctx.strokeStyle = OUT; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(cx, bottom + 2 + warn * 5, 3 + warn * 3, 4 + warn * 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+function drawShots() {
+  const cam = game.cameraY;
+  for (const sh of game.shots) {
+    const y = sh.y - cam;
+    const sp = Math.hypot(sh.vx, sh.vy) || 1;
+    ctx.fillStyle = 'rgba(44,62,122,0.35)';          // kleine Schleppe
+    ctx.beginPath(); ctx.arc(sh.x - sh.vx / sp * 7, y - sh.vy / sp * 7, sh.r * 0.65, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2c3e7a'; ctx.strokeStyle = '#1c2a63'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(sh.x, y, sh.r + Math.sin(sh.t * 14) * 0.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath(); ctx.arc(sh.x - 2, y - 2, 1.8, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -1035,10 +1236,15 @@ function drawPlayer() {
 
 function drawPlayerAt(px) {
   const p = game.player;
-  const feetY = p.y + PLAYER_H - game.cameraY;
+  drawCharacter(p, px, p.y + PLAYER_H - game.cameraY, game.time, currentSkin());
+}
+
+/** Zeichnet die Figur mit dem Skin 'sk' (px = Mitte, feetY = Fusslinie, time = für Blinzeln & Propeller). */
+function drawCharacter(p, px, feetY, time, sk) {
   const k = -p.squashAmp * Math.exp(-p.squashT * 7) * Math.cos(p.squashT * 22);  // Squash & Stretch
   const f = p.facing, up = p.vy < 0, fast = p.vy < -750 || p.propTimer > 0 || p.jetTimer > 0;
-  const OUT = '#2f6b1f';
+  const OUT = sk.out;
+  const hat = p.propTimer > 0;      // Propeller-Hut verdeckt Kopfschmuck
 
   ctx.save();
   if (p.invuln > 0 && Math.floor(p.invuln * 14) % 2) ctx.globalAlpha = 0.4;
@@ -1048,40 +1254,32 @@ function drawPlayerAt(px) {
   ctx.lineWidth = 2.5; ctx.strokeStyle = OUT;
 
   // Füsse
-  ctx.fillStyle = '#6cba34';
+  ctx.fillStyle = sk.feet;
   for (const fx of [-9, 9]) {
     ctx.beginPath(); ctx.ellipse(fx + f * 2, up ? -4 : -3, 7, 3.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
   // Arme: nach oben beim Steigen, seitlich beim Fallen
   const hy = up ? -33 : -15;
-  for (const [w, col] of [[5, OUT], [2, '#a6e86b']]) {
+  for (const [w, col] of [[5, OUT], [2, sk.arm]]) {
     ctx.lineWidth = w; ctx.strokeStyle = col;
     for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 16, -22); ctx.lineTo(s * 25, hy); ctx.stroke(); }
   }
   ctx.lineWidth = 2.5; ctx.strokeStyle = OUT;
 
-  // Blatt-Schopf (weg, solange der Propeller-Hut aufliegt)
-  if (!(p.propTimer > 0)) {
-    const sway = clamp(-p.vy / 900, -0.4, 0.5) + p.vx * 0.001;
-    ctx.fillStyle = '#58b82b';
-    for (const s of [-1, 1]) {
-      ctx.save(); ctx.translate(s * 4, -37); ctx.rotate(s * (0.5 + sway));
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(s * 8, -8, 0, -15); ctx.quadraticCurveTo(-s * 5, -8, 0, 0);
-      ctx.fill(); ctx.stroke(); ctx.restore();
-    }
-  }
+  // Kopfschmuck hinter dem Körper (Blätter, Ohren, Antenne)
+  if (!hat) drawSkinTop(sk, p, f, false);
 
   if (p.jetTimer > 0) drawJetpack(-f * 21, -10);      // Jetpack auf dem Rücken
 
   // Körper mit Farbverlauf, Bauch und Tupfen
   const g = ctx.createLinearGradient(0, -40, 0, -5);
-  g.addColorStop(0, '#c9f78f'); g.addColorStop(1, '#79c93e');
+  g.addColorStop(0, sk.body[0]); g.addColorStop(1, sk.body[1]);
   ctx.fillStyle = g;
   roundedRect(-18, -39, 36, 34, 15); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,225,0.55)';
+  ctx.fillStyle = sk.belly;
   ctx.beginPath(); ctx.ellipse(-f, -12, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(70,140,30,0.35)';
+  ctx.fillStyle = sk.spot;
   ctx.beginPath(); ctx.arc(-f * 12, -34, 2, 0, Math.PI * 2); ctx.arc(-f * 8, -31, 1.5, 0, Math.PI * 2); ctx.fill();
 
   // Augen
@@ -1091,7 +1289,7 @@ function drawPlayerAt(px) {
     for (const ex of exs) {
       ctx.beginPath(); ctx.moveTo(ex - 3, -31); ctx.lineTo(ex + 3, -25); ctx.moveTo(ex + 3, -31); ctx.lineTo(ex - 3, -25); ctx.stroke();
     }
-  } else if (game.time % 3.4 < 0.12) {                 // Blinzeln
+  } else if (time % 3.4 < 0.12) {                 // Blinzeln
     ctx.lineWidth = 2;
     for (const ex of exs) { ctx.beginPath(); ctx.arc(ex, -28, 4, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke(); }
   } else {
@@ -1120,9 +1318,12 @@ function drawPlayerAt(px) {
     ctx.beginPath(); ctx.arc(mx, -20, 4.5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
   }
 
+  // Kopfschmuck vor dem Körper (Schleife, Krone)
+  if (!hat) drawSkinTop(sk, p, f, true);
+
   // Propeller-Hut (blinkt kurz vor Ende)
   if (p.propTimer > 0 && (p.propTimer > 0.6 || Math.floor(p.propTimer * 12) % 2 === 0)) {
-    drawPropellerHat(0, -PLAYER_H + 4, game.time * 40);
+    drawPropellerHat(0, -PLAYER_H + 4, time * 40);
   }
   // Schild-Blase (blinkt kurz vor Ende)
   if (p.shield > 0 && (p.shield > 2 || Math.floor(p.shield * 8) % 2 === 0)) {
@@ -1130,6 +1331,50 @@ function drawPlayerAt(px) {
     ctx.beginPath(); ctx.arc(0, -20, 30, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
   ctx.restore();
+}
+
+/** Kopfschmuck des Skins. front=false: hinter dem Körper, front=true: davor. */
+function drawSkinTop(sk, p, f, front) {
+  ctx.lineWidth = 2.5; ctx.strokeStyle = sk.out;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const sway = clamp(-p.vy / 900, -0.4, 0.5) + p.vx * 0.001;
+
+  if (sk.top === 'leaves' && !front) {               // Blatt-Schopf
+    ctx.fillStyle = sk.acc;
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * 4, -37); ctx.rotate(s * (0.5 + sway));
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(s * 8, -8, 0, -15); ctx.quadraticCurveTo(-s * 5, -8, 0, 0);
+      ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+  } else if (sk.top === 'ears' && !front) {          // Katzenohren
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = sk.acc;
+      ctx.beginPath(); ctx.moveTo(s * 4, -36); ctx.lineTo(s * 10, -53); ctx.lineTo(s * 17, -33); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = sk.acc2;
+      ctx.beginPath(); ctx.moveTo(s * 8, -38); ctx.lineTo(s * 11, -47); ctx.lineTo(s * 14, -37); ctx.closePath(); ctx.fill();
+    }
+  } else if (sk.top === 'antenna' && !front) {       // Roboter-Antenne
+    const ax = sway * 8;
+    ctx.beginPath(); ctx.moveTo(0, -36); ctx.lineTo(ax, -51); ctx.stroke();
+    ctx.fillStyle = sk.acc;
+    ctx.beginPath(); ctx.arc(ax, -54, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else if (sk.top === 'bow' && front) {            // Schleife
+    const bx = -f * 9, by = -40;
+    ctx.fillStyle = sk.acc;
+    for (const s of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(bx, by - 2); ctx.lineTo(bx + s * 12, by - 10); ctx.lineTo(bx + s * 12, by + 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = sk.acc2;
+    ctx.beginPath(); ctx.arc(bx, by - 2, 3.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else if (sk.top === 'crown' && front) {          // Krone
+    ctx.fillStyle = sk.acc;
+    ctx.beginPath();
+    ctx.moveTo(-11, -37); ctx.lineTo(-12, -50); ctx.lineTo(-6, -44); ctx.lineTo(0, -53);
+    ctx.lineTo(6, -44); ctx.lineTo(12, -50); ctx.lineTo(11, -37); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = sk.acc2;
+    ctx.beginPath(); ctx.arc(0, -41, 2.4, 0, Math.PI * 2); ctx.fill();
+  }
 }
 
 function drawHUD() {
@@ -1161,7 +1406,7 @@ function drawHUD() {
    10. SPIELABLAUF & HAUPTSCHLEIFE
    --------------------------------------------------------------------- */
 function showScreen(name) {
-  el.btnPause.classList.toggle('paused', name === 'pause');
+  el.btnPause.classList.toggle('paused', name === 'pause' || (name === 'skins' && game.skinFrom === 'paused'));
   for (const key in screens) screens[key].classList.toggle('hidden', key !== name);
 }
 
@@ -1208,7 +1453,121 @@ function endGame() {
   el.finalScore.textContent = game.score;
   el.finalBest.textContent = highscore;
   el.newRecord.classList.toggle('hidden', !game.newRecord);
+
+  // Punkte der Runde zum Skin-Konto addieren und neue Skins melden
+  const before = totalPoints;
+  totalPoints += game.score;
+  storeSet(TOTAL_KEY, totalPoints);
+  const fresh = SKINS.filter(s => s.cost > before && s.cost <= totalPoints);
+  el.newSkin.textContent = fresh.length ? `Neuer Skin: ${fresh.map(s => s.name).join(', ')}!` : '';
+  el.newSkin.classList.toggle('hidden', fresh.length === 0);
+  el.overProgress.textContent = progressText();
+  if (fresh.length) sfx.powerup();
   showScreen('over');
+}
+
+/* ---- Skin-Menü ---- */
+const PREVIEW_W = 64, PREVIEW_H = 72;       // logische Grösse der Vorschau-Bilder
+
+/** Malt die Figur mit dem Skin 'sk' auf ein kleines Canvas (gesperrte Skins als Silhouette). */
+function drawSkinPreview(cv, sk, unlocked) {
+  const c = cv.getContext('2d');
+  const saved = ctx;
+  ctx = c;                                   // die Zeichenfunktionen benutzen das globale ctx
+  try {
+    c.setTransform(2, 0, 0, 2, 0, 0);
+    const dummy = { vx: 0, vy: -200, facing: 1, propTimer: 0, jetTimer: 0, shield: 0,
+                    invuln: 0, squashT: 9, squashAmp: 0, dead: false };
+    drawCharacter(dummy, PREVIEW_W / 2, PREVIEW_H - 4, 1, sk);
+    if (!unlocked) {
+      c.globalCompositeOperation = 'source-atop';
+      c.fillStyle = 'rgba(45, 55, 72, 0.8)';
+      c.fillRect(0, 0, PREVIEW_W, PREVIEW_H);
+      c.globalCompositeOperation = 'source-over';
+    }
+  } finally {
+    ctx = saved;
+  }
+}
+
+function renderSkinMenu() {
+  el.skinTotal.textContent = `Gesamtpunkte: ${totalPoints}`;
+  el.skinProgress.textContent = progressText();
+
+  const next = nextLockedSkin();
+  let pct = 100;
+  if (next) {
+    const prev = SKINS.filter(isUnlocked).pop();
+    pct = (totalPoints - prev.cost) / (next.cost - prev.cost) * 100;
+  }
+  el.skinBarFill.style.width = clamp(pct, 0, 100) + '%';
+
+  el.skinGrid.textContent = '';
+  for (const sk of SKINS) {
+    const unlocked = isUnlocked(sk);
+    const selected = sk.id === skinId;
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.tabIndex = -1;
+    card.disabled = !unlocked;
+    card.className = 'skin-card' + (selected ? ' selected' : '') + (unlocked ? '' : ' locked');
+
+    const cv = document.createElement('canvas');
+    cv.width = PREVIEW_W * 2; cv.height = PREVIEW_H * 2;
+    drawSkinPreview(cv, sk, unlocked);
+
+    const name = document.createElement('span');
+    name.className = 'skin-name';
+    name.textContent = sk.name;
+    const state = document.createElement('span');
+    state.className = 'skin-state';
+    state.textContent = !unlocked ? `ab ${sk.cost} Pkt.` : selected ? 'Gewählt' : 'Wählen';
+
+    card.append(cv, name, state);
+    card.addEventListener('click', () => selectSkin(sk.id));
+    el.skinGrid.appendChild(card);
+  }
+}
+
+function selectSkin(id) {
+  const sk = skinById(id);
+  if (!sk || !isUnlocked(sk) || id === skinId) return;
+  skinId = id;
+  storeSet(SKIN_KEY, id);
+  sfx.select();
+  renderSkinMenu();
+}
+
+/** Pfeiltasten im Menü: vorheriger / nächster freigeschalteter Skin. */
+function cycleSkin(dir) {
+  const list = SKINS.filter(isUnlocked);
+  const i = list.findIndex(s => s.id === skinId);
+  selectSkin(list[(i + dir + list.length) % list.length].id);
+}
+
+function openSkins() {
+  if (game.state !== 'start' && game.state !== 'over' && game.state !== 'paused') return;
+  game.skinFrom = game.state;
+  game.state = 'skins';
+  pointers.clear();
+  renderSkinMenu();
+  showScreen('skins');
+}
+
+function closeSkins() {
+  if (game.state !== 'skins') return;
+  game.state = game.skinFrom;
+  showScreen(game.state === 'start' ? 'start' : game.state === 'paused' ? 'pause' : 'over');
+}
+
+function handleSkinKey(e) {
+  switch (e.code) {
+    case 'ArrowLeft': case 'KeyA':  e.preventDefault(); cycleSkin(-1); break;
+    case 'ArrowRight': case 'KeyD': e.preventDefault(); cycleSkin(1); break;
+    case 'Escape': case 'KeyK': case 'KeyP': case 'Space': case 'Enter':
+      e.preventDefault(); if (!e.repeat) closeSkins(); break;
+    case 'KeyM': if (!e.repeat) toggleMute(); break;
+  }
 }
 
 /** Hauptschleife mit Delta-Time: Spiel läuft auf allen Bildschirmen gleich schnell. */
@@ -1218,9 +1577,10 @@ function frame(now) {
   const dt = clamp((now - lastTime) / 1000, 0, MAX_DT);
   lastTime = now;
 
-  if (game.state === 'playing') update(dt);
-  else if (game.state === 'start') updateIdle(dt);
-  else if (game.state === 'over') updateParticles(dt);
+  const st = game.state === 'skins' ? game.skinFrom : game.state;   // im Skin-Menü läuft der Hintergrund weiter
+  if (st === 'playing') update(dt);
+  else if (st === 'start') updateIdle(dt);
+  else if (st === 'over') updateParticles(dt);
 
   draw();
 }
