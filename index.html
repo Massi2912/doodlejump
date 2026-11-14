@@ -32,28 +32,64 @@
     <!-- Startbildschirm -->
     <div id="screen-start" class="screen">
       <h1>Doodle Jump</h1>
-      <p class="blink">Tippen / Leertaste zum Starten</p>
-      <button id="btn-skins" class="btn-small" type="button" tabindex="-1">Skins</button>
-      <p class="hint">← → oder A / D · Handy: links/rechts tippen oder kippen<br>Schild &amp; Jetpack einsammeln<br>P = Pause · M = Ton · K = Skins</p>
+      <div class="chips">
+        <span class="chip gold"><i class="coin-dot"></i><b id="chip-coins">0</b></span>
+        <span class="chip" id="chip-abil">Fähigkeit: keine</span>
+      </div>
+      <button id="btn-play" class="btn-play" type="button" tabindex="-1">Spielen</button>
+      <div class="btn-row">
+        <button id="btn-skins" class="btn-small" type="button" tabindex="-1">Skins</button>
+        <button id="btn-shop" class="btn-small" type="button" tabindex="-1">Shop</button>
+      </div>
+      <div class="controls">
+        <span class="ctrl-label">Tastatur</span>
+        <span class="ctrl-items">
+          <span class="keys"><kbd>←</kbd><kbd>→</kbd></span>
+          <span class="ctrl-or">oder</span>
+          <span class="keys"><kbd>A</kbd><kbd>D</kbd></span>
+        </span>
+        <span class="ctrl-label">Handy</span>
+        <span class="ctrl-items">
+          <span class="phone"><span>links</span><span>rechts</span></span>
+          <span class="ctrl-note">tippen</span>
+        </span>
+      </div>
     </div>
 
     <!-- Pause -->
     <div id="screen-pause" class="screen hidden">
+      <div class="pause-icon"><i></i><i></i></div>
       <h2>Pause</h2>
-      <p class="blink">P / Tippen zum Weiterspielen</p>
+      <div class="chips">
+        <span class="chip">Score <b id="pause-score">0</b></span>
+        <span class="chip gold"><i class="coin-dot"></i><b id="pause-coins">0</b></span>
+      </div>
+      <span class="chip" id="pause-abil">Fähigkeit: keine</span>
+      <button id="btn-resume" class="btn-play" type="button" tabindex="-1">Weiter</button>
       <button id="btn-skins-pause" class="btn-small" type="button" tabindex="-1">Skins</button>
+      <p class="hint">P oder Tippen zum Weiterspielen</p>
     </div>
 
     <!-- Game Over -->
     <div id="screen-over" class="screen hidden">
       <h2>Game Over</h2>
-      <p class="big">Score: <span id="final-score">0</span></p>
-      <p>Highscore: <span id="final-best">0</span></p>
-      <p id="new-record" class="record hidden">★ Neuer Highscore! ★</p>
+      <div class="score-card">
+        <span class="score-label">Score</span>
+        <span class="score-big" id="final-score">0</span>
+        <div class="score-row"><span>Highscore</span><b id="final-best">0</b></div>
+      </div>
+      <p id="new-record" class="record hidden">Neuer Highscore!</p>
       <p id="new-skin" class="record hidden"></p>
+      <div class="chips">
+        <span class="chip gold"><i class="coin-dot"></i>+<b id="over-gain">0</b></span>
+        <span class="chip">Gesamt <b id="over-total">0</b></span>
+      </div>
       <p id="over-progress" class="small"></p>
       <button id="btn-restart" type="button">Nochmal spielen</button>
-      <button id="btn-skins-over" class="btn-small" type="button" tabindex="-1">Skins</button>
+      <div class="btn-row">
+        <button id="btn-skins-over" class="btn-small" type="button" tabindex="-1">Skins</button>
+        <button id="btn-shop-over" class="btn-small" type="button" tabindex="-1">Shop</button>
+      </div>
     </div>
 
     <!-- Skin-Auswahl -->
@@ -64,6 +100,20 @@
       <div id="skin-bar"><div id="skin-bar-fill"></div></div>
       <div id="skin-grid"></div>
       <button id="btn-skins-close" class="btn-small" type="button" tabindex="-1">Zurück</button>
+    </div>
+
+    <!-- Shop -->
+    <div id="screen-shop" class="screen hidden">
+      <h2>Shop</h2>
+      <div id="shop-coins" class="chip gold big"><i class="coin-dot"></i><b id="shop-coin-num">0</b></div>
+      <div id="shop-tabs">
+        <button id="tab-abil" class="btn-small" type="button" tabindex="-1">Fähigkeiten</button>
+        <button id="tab-paper" class="btn-small" type="button" tabindex="-1">Papier</button>
+        <button id="tab-skin" class="btn-small" type="button" tabindex="-1">Skins</button>
+      </div>
+      <p id="shop-hint" class="small"></p>
+      <div id="shop-grid"></div>
+      <button id="btn-shop-close" class="btn-small" type="button" tabindex="-1">Zurück</button>
     </div>
   </div>
 
