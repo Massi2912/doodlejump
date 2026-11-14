@@ -36,8 +36,6 @@ const MAX_DT           = 1 / 30; // Delta-Time-Deckel (verhindert Sprünge nach 
 // Steuerung
 const MOVE_SPEED       = 340;    // Seitwärts-Tempo
 const MOVE_SMOOTHING   = 14;     // Trägheit der Seitwärtsbewegung
-const TILT_MAX_DEGREES = 22;     // Neigung (Grad) für volle Geschwindigkeit
-const TILT_DEADZONE    = 3;      // Neigung, die ignoriert wird
 
 // Figur, Plattformen, Kamera
 const PLAYER_W = 36;
@@ -87,7 +85,7 @@ const CHASER_START_SCORE = Infinity;  // Verfolger
 const INKER_W = 40, INKER_H = 36;
 const CHASER_W = 38, CHASER_H = 34;
 const INK_SPEED = 200;             // Tempo des Kleckses (Pixel/Sekunde)
-const INKER_CD_MIN = 2, INKER_CD_MAX = 3.2;   // Sekunden zwischen zwei Schüssen (zählt nur, wenn sichtbar)
+const INKER_CD_MIN = 1.1, INKER_CD_MAX = 1.9;   // Sekunden zwischen zwei Schüssen (zählt nur, wenn sichtbar)
 
 // Boss (alle BOSS_EVERY_SCORE Punkte)
 const BOSS_EVERY_SCORE = Infinity;   // Boss noch nicht fertig
@@ -121,7 +119,58 @@ const SKINS = [
     belly: 'rgba(100,200,255,0.55)', spot: 'rgba(40,50,60,0.3)', acc: '#ff5a5f', acc2: '#4a5568' },
   { id: 'koenig', plat: ['#ffd84d', '#b8860b'], name: 'Königlich', cost: 25000, top: 'crown',
     body: ['#fff0a8', '#e8b820'], out: '#8a6208', feet: '#d9a516', arm: '#ffe27a',
-    belly: 'rgba(255,252,225,0.7)', spot: 'rgba(170,120,10,0.3)', acc: '#ffd23f', acc2: '#e74c3c' }
+    belly: 'rgba(255,252,225,0.7)', spot: 'rgba(170,120,10,0.3)', acc: '#ffd23f', acc2: '#e74c3c' },
+  // Nur im Shop mit Münzen kaufbar (cost: Infinity = nicht über Punkte freischaltbar)
+  { id: 'geist', plat: ['#e8eef7', '#8a97ab'], name: 'Gespenst', cost: Infinity, top: 'curl',
+    body: ['#ffffff', '#cfd8e8'], out: '#5b6b86', feet: '#e2e8f2', arm: '#f1f5fb',
+    belly: 'rgba(200,215,240,0.5)', spot: 'rgba(120,140,180,0.3)', acc: '#cfd8e8', acc2: '#cfd8e8' },
+  { id: 'hase', plat: ['#e9c9a0', '#8a6a45'], name: 'Hase', cost: Infinity, top: 'bunny',
+    body: ['#f7ead9', '#d1ab84'], out: '#6b4a2f', feet: '#c49a70', arm: '#e8cba8',
+    belly: 'rgba(255,255,250,0.75)', spot: 'rgba(120,80,40,0.28)', acc: '#e8cba8', acc2: '#ffb3c1' },
+  { id: 'ninja', plat: ['#5a6578', '#1a202c'], name: 'Ninja', cost: Infinity, top: 'headband',
+    body: ['#4a5568', '#1f2430'], out: '#0d1117', feet: '#2d3748', arm: '#4a5568',
+    belly: 'rgba(120,130,150,0.35)', spot: 'rgba(255,255,255,0.15)', acc: '#e53e3e', acc2: '#e53e3e' },
+  { id: 'alien', plat: ['#b794f4', '#6b46c1'], name: 'Alien', cost: Infinity, top: 'antennas',
+    body: ['#e9d8fd', '#9f7aea'], out: '#44337a', feet: '#805ad5', arm: '#d6bcfa',
+    belly: 'rgba(250,245,255,0.6)', spot: 'rgba(90,60,160,0.3)', acc: '#68d391', acc2: '#68d391' },
+  { id: 'zauberer', plat: ['#7f9cf5', '#3c366b'], name: 'Zauberer', cost: Infinity, top: 'wizard',
+    body: ['#c3dafe', '#667eea'], out: '#2c2a6b', feet: '#5a67d8', arm: '#a3bffa',
+    belly: 'rgba(235,242,255,0.6)', spot: 'rgba(60,60,150,0.3)', acc: '#434190', acc2: '#ffd23f' },
+  { id: 'drache', plat: ['#fc8181', '#9b2c2c'], name: 'Drache', cost: Infinity, top: 'horns',
+    body: ['#feb2b2', '#e53e3e'], out: '#742a2a', feet: '#c53030', arm: '#fc8181',
+    belly: 'rgba(255,245,200,0.7)', spot: 'rgba(120,20,20,0.3)', acc: '#fefcbf', acc2: '#fefcbf' }
+];
+
+// Münzen (Währung für den Shop)
+const START_COINS = 0;           // Test-Münzen beim Laden (0 = normal starten)
+const COIN_CHANCE     = 0.16;    // Wahrscheinlichkeit pro Plattform (nie bei Monstern/Power-Ups)
+const COIN_MIN_HEIGHT = 150;     // erst ab dieser Höhe (Pixel)
+const COIN_PICKUP     = 24;      // Einsammel-Radius
+const MAGNET_RANGE    = 85;      // Fähigkeit "Münzmagnet"
+const MAGNET_SPEED    = 420;
+
+// Shop-Fähigkeiten: pro Spiel kann eine ausgerüstet werden (bewusst nicht zu stark)
+const ABILITIES = [
+  { id: 'glueck',  name: 'Glückspilz',      cost: 25,  desc: 'Doppelt so viele Münzen' },
+  { id: 'magnet',  name: 'Münzmagnet',      cost: 50,  desc: 'Zieht Münzen in der Nähe an' },
+  { id: 'fuesse',  name: 'Grosse Füsse',    cost: 75,  desc: 'Etwas grössere Füsse' },
+  { id: 'schild',  name: 'Startschild',     cost: 100, desc: 'Schild bis zum 1. Treffer' },
+  { id: 'schub',   name: 'Startschub',      cost: 150, desc: 'Propeller-Flug für 6 Sek.' },
+  { id: 'netz',    name: 'Sicherheitsnetz', cost: 200, desc: 'Rettet 1× vor Sturz/Treffer' }
+];
+const START_PROP_TIME   = 6;
+
+// Preise der Shop-Skins (nur diese Skins gibt es im Shop; die anderen schaltest du über Punkte frei)
+const SKIN_COIN_PRICE = { geist: 20, hase: 30, ninja: 45, alien: 60, zauberer: 80, drache: 100 };
+
+// Papierarten (Shop). style: 'grid' | 'lines' | 'dots' | 'mm'
+const PAPERS = [
+  { id: 'kariert',    name: 'Kariert',    cost: 0,   bg: '#fbfaf0', style: 'grid',  size: 25, line: 'rgba(110,165,220,0.35)', margin: 'rgba(230,90,90,0.5)',  holes: true },
+  { id: 'liniert',    name: 'Liniert',    cost: 40,  bg: '#fdfcf3', style: 'lines', size: 28, line: 'rgba(110,165,220,0.5)',  margin: 'rgba(230,90,90,0.5)',  holes: true },
+  { id: 'punkte',     name: 'Punktraster',cost: 55,  bg: '#faf8f2', style: 'dots',  size: 25, line: 'rgba(90,100,120,0.55)',  margin: null, holes: false },
+  { id: 'millimeter', name: 'Millimeter', cost: 70, bg: '#f3fbef', style: 'mm',    size: 10, line: 'rgba(70,170,90,0.3)', heavy: 'rgba(70,170,90,0.55)', margin: null, holes: false },
+  { id: 'pergament',  name: 'Pergament',  cost: 85, bg: '#f0deb0', style: 'lines', size: 30, line: 'rgba(130,90,40,0.25)',   margin: 'rgba(150,60,40,0.35)', holes: false },
+  { id: 'tafel',      name: 'Tafel',      cost: 100, bg: '#2e4a3c', style: 'lines', size: 40, line: 'rgba(255,255,255,0.18)', margin: null, holes: false }
 ];
 
 /* ---------------------------------------------------------------------
@@ -167,7 +216,8 @@ const screens = {
   start: document.getElementById('screen-start'),
   pause: document.getElementById('screen-pause'),
   over:  document.getElementById('screen-over'),
-  skins: document.getElementById('screen-skins')
+  skins: document.getElementById('screen-skins'),
+  shop:  document.getElementById('screen-shop')
 };
 const el = {
   finalScore: document.getElementById('final-score'),
@@ -185,7 +235,26 @@ const el = {
   skinGrid:     document.getElementById('skin-grid'),
   skinTotal:    document.getElementById('skin-total'),
   skinProgress: document.getElementById('skin-progress'),
-  skinBarFill:  document.getElementById('skin-bar-fill')
+  skinBarFill:  document.getElementById('skin-bar-fill'),
+  chipCoins:    document.getElementById('chip-coins'),
+  chipAbil:     document.getElementById('chip-abil'),
+  btnPlay:      document.getElementById('btn-play'),
+  shopCoinNum:  document.getElementById('shop-coin-num'),
+  overGain:     document.getElementById('over-gain'),
+  overTotal:    document.getElementById('over-total'),
+  pauseScore:   document.getElementById('pause-score'),
+  pauseCoins:   document.getElementById('pause-coins'),
+  pauseAbil:    document.getElementById('pause-abil'),
+  btnResume:    document.getElementById('btn-resume'),
+  btnShop:      document.getElementById('btn-shop'),
+  btnShopOver:  document.getElementById('btn-shop-over'),
+  btnShopClose: document.getElementById('btn-shop-close'),
+  tabAbil:      document.getElementById('tab-abil'),
+  tabPaper:     document.getElementById('tab-paper'),
+  tabSkin:      document.getElementById('tab-skin'),
+  shopCoins:    document.getElementById('shop-coins'),
+  shopHint:     document.getElementById('shop-hint'),
+  shopGrid:     document.getElementById('shop-grid')
 };
 
 let viewScale = 1;     // Canvas-Pixel pro logischem Pixel
@@ -211,10 +280,23 @@ function storeSet(key, value) { try { localStorage.setItem(key, String(value)); 
 // Wer schon einen Highscore hat, startet nicht bei null
 let totalPoints = (() => { const v = parseInt(storeGet(TOTAL_KEY), 10); return Number.isFinite(v) ? v : highscore; })();
 const skinById      = id => SKINS.find(s => s.id === id);
-const isUnlocked    = s => totalPoints >= s.cost;
-const nextLockedSkin = () => SKINS.find(s => s.cost > totalPoints);
-let skinId = (() => { const s = skinById(storeGet(SKIN_KEY)); return s && isUnlocked(s) ? s.id : SKINS[0].id; })();
+const isUnlocked    = s => totalPoints >= s.cost || isOwned('s:' + s.id);   // Punkte ODER im Shop gekauft
+const nextLockedSkin = () => SKINS.find(s => s.cost !== Infinity && !isUnlocked(s));
+let skinId = SKINS[0].id;   // gespeicherter Skin wird unten gesetzt (nach 'owned')
 const currentSkin = () => skinById(skinId);
+
+/* ---- Münzen, gekaufte Dinge, gewähltes Papier und Fähigkeit (bleiben im Browser gespeichert) ---- */
+const COIN_KEY = 'huepfKritzelCoins', OWNED_KEY = 'huepfKritzelOwned';
+const PAPER_KEY = 'huepfKritzelPaper', ABIL_KEY = 'huepfKritzelAbility';
+let coinTotal = Math.max(START_COINS, parseInt(storeGet(COIN_KEY), 10) || 0);
+let owned = (() => { try { const a = JSON.parse(storeGet(OWNED_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; } })();
+const isOwned = key => key === 'p:kariert' || owned.includes(key);
+let paperId = (() => { const k = storeGet(PAPER_KEY); return PAPERS.some(x => x.id === k) && isOwned('p:' + k) ? k : 'kariert'; })();
+let abilityId = (() => { const k = storeGet(ABIL_KEY); return ABILITIES.some(x => x.id === k) && isOwned('a:' + k) ? k : ''; })();
+const currentPaper = () => PAPERS.find(x => x.id === paperId) || PAPERS[0];
+const abilityName = () => { const a = ABILITIES.find(x => x.id === abilityId); return a ? a.name : 'keine'; };
+{ const sv = skinById(storeGet(SKIN_KEY)); if (sv && isUnlocked(sv)) skinId = sv.id; }
+const coinChance = () => COIN_CHANCE * (abilityId === 'glueck' ? 2 : 1);
 
 function progressText() {
   const n = nextLockedSkin();
@@ -264,6 +346,10 @@ function resetGame() {
   game = {
     state: 'start',
     skinFrom: 'start',              // von wo das Skin-Menü geöffnet wurde
+    shopFrom: 'start',              // von wo der Shop geöffnet wurde
+    coinItems: [],                  // Münzen auf den Plattformen
+    coins: 0,                       // in dieser Runde gesammelt
+    netUsed: false,                 // Sicherheitsnetz schon benutzt?
     time: 0,
     idleTime: 0,
     idlePhase: 0,
@@ -285,7 +371,8 @@ function resetGame() {
     lastHatY: START_FEET,
     overAt: 0,
     shake: 0,                       // Stärke des Kamera-Wackelns
-    newRecord: false
+    newRecord: false,
+    recordScore: highscore          // Rekord vom Rundenanfang (für die Rekord-Linie)
   };
   game.platforms.push(makePlatform(W / 2 - PLATFORM_W / 2, START_FEET, 'normal'));
   spawnPlatforms();
@@ -321,6 +408,7 @@ function tone(from, to, dur, type = 'sine', vol = 0.15, delay = 0) {
 }
 
 const sfx = {
+  coin:     () => { tone(988, 988, 0.07, 'square', 0.05); tone(1319, 1319, 0.14, 'square', 0.05, 0.06); },
   jump:     () => tone(380, 720, 0.12, 'sine', 0.14),
   select:   () => { tone(520, 780, 0.08, 'triangle', 0.12); tone(780, 1040, 0.1, 'triangle', 0.12, 0.07); },
   spring:   () => { tone(300, 1000, 0.28, 'square', 0.07); tone(500, 1400, 0.2, 'sine', 0.1, 0.05); },
@@ -344,14 +432,12 @@ function toggleMute() {
 }
 
 /* ---------------------------------------------------------------------
-   5. EINGABE (Tastatur, Touch, Neigungssensor)
+   5. EINGABE (Tastatur, Touch)
    --------------------------------------------------------------------- */
 const keys = { left: false, right: false };
 const pointers = new Map();       // aktive Finger/Mäuse -> Seite (-1 links, +1 rechts)
-const tilt = { active: false, value: 0 };
-let tiltRequested = false;
 
-/** Liefert die gewünschte Richtung -1..+1 (Tastatur > Touch > Neigung). */
+/** Liefert die gewünschte Richtung -1..+1 (Tastatur > Touch). */
 function getInputDirection() {
   let d = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   if (d === 0 && pointers.size > 0) {
@@ -359,7 +445,6 @@ function getInputDirection() {
     pointers.forEach(side => { sum += side; });
     d = clamp(sum, -1, 1);
   }
-  if (d === 0 && tilt.active) d = tilt.value;
   return d;
 }
 
@@ -372,6 +457,7 @@ function onActionKey() {
 window.addEventListener('keydown', e => {
   initAudio();
   if (game.state === 'skins') { handleSkinKey(e); return; }
+  if (game.state === 'shop')  { handleShopKey(e); return; }
   switch (e.code) {
     case 'ArrowLeft': case 'KeyA':  keys.left = true;  e.preventDefault(); break;
     case 'ArrowRight': case 'KeyD': keys.right = true; e.preventDefault(); break;
@@ -379,6 +465,7 @@ window.addEventListener('keydown', e => {
     case 'KeyP': case 'Escape':     if (!e.repeat) togglePause(); break;
     case 'KeyM':                    if (!e.repeat) toggleMute(); break;
     case 'KeyK':                    if (!e.repeat) openSkins(); break;
+    case 'KeyB':                    if (!e.repeat) openShop(); break;
   }
 });
 window.addEventListener('keyup', e => {
@@ -403,7 +490,6 @@ function sideOf(e) {
 wrapper.addEventListener('pointerdown', e => {
   if (e.target.closest('button')) return;      // Knöpfe haben eigene Handler
   initAudio();
-  if (e.pointerType === 'touch') enableTilt();
   if (game.state === 'start') startGame();
   else if (game.state === 'paused') { togglePause(); return; }
   if (game.state === 'playing') pointers.set(e.pointerId, sideOf(e));
@@ -414,26 +500,6 @@ wrapper.addEventListener('pointermove', e => {
 ['pointerup', 'pointercancel'].forEach(type =>
   window.addEventListener(type, e => pointers.delete(e.pointerId)));
 
-/** Neigungssensor: optional, ohne Sensor/Erlaubnis bleibt die Touch-Steuerung. */
-function enableTilt() {
-  if (tiltRequested || typeof DeviceOrientationEvent === 'undefined') return;
-  tiltRequested = true;
-  const listen = () => window.addEventListener('deviceorientation', e => {
-    if (e.gamma == null) return;
-    tilt.active = true;
-    const g = e.gamma;
-    tilt.value = Math.abs(g) < TILT_DEADZONE ? 0 : clamp(g / TILT_MAX_DEGREES, -1, 1);
-  });
-  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    // iOS: Erlaubnis muss in einer Nutzer-Geste angefragt werden
-    DeviceOrientationEvent.requestPermission()
-      .then(res => { if (res === 'granted') listen(); })
-      .catch(() => { /* Fallback: Touch */ });
-  } else {
-    listen();
-  }
-}
-
 el.btnPause.addEventListener('click', () => { togglePause(); el.btnPause.blur(); });
 el.btnMute.addEventListener('click',  () => { initAudio(); toggleMute(); el.btnMute.blur(); });
 el.btnRestart.addEventListener('click', () => { initAudio(); startGame(); });
@@ -441,6 +507,14 @@ el.btnSkins.addEventListener('click',      () => { initAudio(); openSkins(); });
 el.btnSkinsOver.addEventListener('click',  () => { initAudio(); openSkins(); });
 el.btnSkinsPause.addEventListener('click', () => { initAudio(); openSkins(); });
 el.btnSkinsClose.addEventListener('click', () => { closeSkins(); });
+el.btnResume.addEventListener('click', () => { initAudio(); togglePause(); });
+el.btnPlay.addEventListener('click', () => { initAudio(); startGame(); });
+el.btnShop.addEventListener('click',      () => { initAudio(); openShop(); });
+el.btnShopOver.addEventListener('click',  () => { initAudio(); openShop(); });
+el.btnShopClose.addEventListener('click', () => { closeShop(); });
+el.tabAbil.addEventListener('click',  () => { shopTab = 'abil';  renderShop(); });
+el.tabPaper.addEventListener('click', () => { shopTab = 'paper'; renderShop(); });
+el.tabSkin.addEventListener('click',  () => { shopTab = 'skin';  renderShop(); });
 
 /* ---------------------------------------------------------------------
    6. SPAWN (Plattformen, Power-Ups, Gegner)
@@ -488,9 +562,19 @@ function spawnRow() {
   if (heightRow > EASY_ZONE && chance(lerp(BREAKABLE_CHANCE_START, BREAKABLE_CHANCE_END, d))) spawnBreakable(y, gap);
 
   // Gegner erst ab ENEMY_START_SCORE
+  let enemyMade = false;
   if (heightRow * SCORE_PER_PIXEL >= ENEMY_START_SCORE &&
       chance(lerp(ENEMY_CHANCE_START, ENEMY_CHANCE_END, d))) {
-    spawnEnemy(pl, moving, y, gap, heightRow * SCORE_PER_PIXEL);
+    enemyMade = spawnEnemy(pl, moving, y, gap, heightRow * SCORE_PER_PIXEL);
+  }
+
+  // Münze: nur gelegentlich, nie bei einem Monster dieser Reihe und nie auf einem Power-Up
+  if (enemyMade) {
+    const en = game.enemies[game.enemies.length - 1];
+    game.coinItems = game.coinItems.filter(c =>
+      Math.abs(c.y - (en.y + en.h / 2)) > 60 || Math.abs(c.x - (en.x + en.w / 2)) > 60);
+  } else if (!pl.powerup && heightRow > COIN_MIN_HEIGHT && chance(coinChance())) {
+    spawnCoin(pl);
   }
 
   game.topY = y;
@@ -539,26 +623,62 @@ function spawnEnemy(pl, moving, y, gap, score) {
     const cy = y - rand(60, 140);
     game.enemies.push({ type: 'chaser', x: rand(20, W - CHASER_W - 20), y: cy, baseY: cy,
                         w: CHASER_W, h: CHASER_H, vx: 0, vy: 0, t: rand(0, 6), awake: false, alive: true });
-    return;
+    return true;
   }
   if (kind === 'inker') {
     const iy = y - rand(40, 70);
     game.enemies.push({ type: 'inker', x: rand(20, W - INKER_W - 20), y: iy, baseY: iy,
                         w: INKER_W, h: INKER_H, vx: (chance(0.5) ? 1 : -1) * rand(25, 50),
-                        t: rand(0, 6), cd: rand(1.5, 2.5), alive: true });
-    return;
+                        t: rand(0, 6), cd: rand(0.8, 1.4), alive: true });
+    return true;
   }
 
   if (!moving && !pl.powerup && chance(0.5)) {
     // Monster sitzt auf der Plattform
     game.enemies.push({ type: 'perch', x: pl.x + (PLATFORM_W - ENEMY_W) / 2, y: y - ENEMY_H,
                         baseY: y - ENEMY_H, w: ENEMY_W, h: ENEMY_H, vx: 0, t: rand(0, 6), alive: true });
+    return true;
   } else if (gap >= 70) {
     // Monster schwebt in der Lücke
     const by = y + gap / 2 - ENEMY_H / 2;
     game.enemies.push({ type: 'float', x: rand(10, W - ENEMY_W - 10), y: by, baseY: by,
                         w: ENEMY_W, h: ENEMY_H, vx: (chance(0.5) ? 1 : -1) * rand(30, 60),
                         t: rand(0, 6), alive: true });
+    return true;
+  }
+  return false;                                     // kein Monster entstanden
+}
+
+/** Münze über der Plattform (bewegt sich mit ihr mit). */
+function spawnCoin(pl) {
+  const ox = PLATFORM_W / 2, oy = -17;
+  const cx = pl.x + ox, cy = pl.y + oy;
+  for (const e of game.enemies) {                    // nie in der Nähe eines Monsters
+    if (Math.abs(e.x + e.w / 2 - cx) < 55 && Math.abs(e.y + e.h / 2 - cy) < 55) return;
+  }
+  game.coinItems.push({ pl, ox, oy, x: cx, y: cy, free: false, t: rand(0, 6), got: false });
+}
+
+/** Münzen mitbewegen, vom Magneten anziehen lassen und einsammeln. */
+function updateCoins(dt) {
+  const p = game.player;
+  const px = p.x, py = p.y + PLAYER_H / 2;
+  for (const c of game.coinItems) {
+    if (!c.free) { c.x = c.pl.x + c.ox; c.y = c.pl.y + c.oy; }
+    if (p.dead) continue;
+    let d = Math.hypot(px - c.x, py - c.y);
+    if (abilityId === 'magnet' && !c.free && d < MAGNET_RANGE) c.free = true;
+    if (c.free && d > 0.01) {
+      const step = Math.min(MAGNET_SPEED * dt, d);
+      c.x += (px - c.x) / d * step; c.y += (py - c.y) / d * step;
+      d = Math.hypot(px - c.x, py - c.y);
+    }
+    if (d < COIN_PICKUP) {
+      c.got = true;
+      game.coins++;
+      sfx.coin();
+      spawnParticles(c.x, c.y, 6, ['#ffd23f', '#fff3a0', '#e8b820'], 140);
+    }
   }
 }
 
@@ -647,6 +767,7 @@ function update(dt) {
   updateEnemies(dt);
   updatePlayer(dt);
   checkPowerupPickup();
+  updateCoins(dt);
   checkEnemyCollisions();
   updateShots(dt);
   checkShotHits();
@@ -770,12 +891,31 @@ function cleanup() {
   const limit = game.cameraY + H + 80;
   game.platforms = game.platforms.filter(pl => !pl.broken && pl.y < limit);
   game.enemies = game.enemies.filter(e => e.alive && e.y < limit);
+  game.coinItems = game.coinItems.filter(c => !c.got && c.y < limit);
+}
+
+/** Sicherheitsnetz: rettet einmal pro Spiel (Sturz, Monster oder Klecks). */
+function canUseNet() { return abilityId === 'netz' && !game.netUsed; }
+function useNet() {
+  const p = game.player;
+  game.netUsed = true;
+  p.invuln = INVULN_TIME;
+  sfx.spring();
+  spawnParticles(p.x, p.y + PLAYER_H / 2, 16, ['#ffffff', '#7ec8ff', '#ffd23f'], 240);
+  game.shake = Math.max(game.shake, 5);
 }
 
 function checkGameOver() {
   const p = game.player;
   const below = p.y - game.cameraY;
-  if (!p.dead && below > H + 30) die(false);       // unten aus dem Bild gefallen
+  if (!p.dead && below > H + 30) {                 // unten aus dem Bild gefallen
+    if (canUseNet()) {                             // Sicherheitsnetz fängt dich einmal auf
+      useNet();
+      p.y = game.cameraY + H - PLAYER_H - 4;
+      p.vy = SPRING_VELOCITY;
+      p.springT = 0.5;
+    } else die(false);
+  }
   if (p.dead && below > H + 260) endGame();
 }
 
@@ -787,7 +927,7 @@ function checkGameOver() {
 function checkPlatformCollisions(prevFeet) {
   const p = game.player;
   const feet = p.y + PLAYER_H;
-  const reach = PLATFORM_W / 2 + PLAYER_W * 0.3;
+  const reach = PLATFORM_W / 2 + PLAYER_W * 0.3 + (abilityId === 'fuesse' ? 6 : 0);
   let hit = null;
 
   for (const pl of game.platforms) {
@@ -855,7 +995,7 @@ function checkPowerupPickup() {
     if (!overlap(body, { x: pl.x + u.ox, y: pl.y - h, w, h })) continue;
     pl.powerup = null;
     if (u.type === 'shield') {
-      p.shield = SHIELD_TIME;
+      p.shield = Math.max(p.shield, SHIELD_TIME);
       sfx.shield();
     } else if (u.type === 'jetpack') {
       p.jetTimer = JETPACK_TIME; p.propTimer = 0; p.vy = -JETPACK_SPEED;
@@ -895,6 +1035,8 @@ function checkShotHits() {
       p.invuln = INVULN_TIME;
       spawnParticles(p.x, p.y + 20, 12, ['#7ec8ff', '#ffffff', '#2b6cb0'], 240);
       sfx.shieldBreak();
+    } else if (canUseNet()) {
+      useNet();
     } else {
       die(true);
       return;
@@ -927,6 +1069,10 @@ function checkEnemyCollisions() {
       spawnParticles(p.x, p.y + 20, 14, ['#7ec8ff', '#ffffff', '#2b6cb0'], 260);
       sfx.shieldBreak();
       game.shake = Math.max(game.shake, 6);
+    } else if (canUseNet()) {             // Sicherheitsnetz rettet
+      useNet();
+      e.alive = false;
+      spawnParticles(e.x + e.w / 2, e.y + e.h / 2, 16, ['#b06ad8', '#6a2f95', '#e9c8ff'], 260);
     } else {
       die(true);
       return;
@@ -943,48 +1089,102 @@ function draw() {
   const sh = game.state === 'playing' ? game.shake : 0;
   if (sh) ctx.translate(rand(-sh, sh), rand(-sh, sh));
   drawBackground();
+  drawRecordLine();
   drawPlatforms();
+  drawCoins();
   drawEnemies();
   drawShots();
   drawParticles();
   drawPlayer();
   ctx.restore();
-  const st = game.state === 'skins' ? game.skinFrom : game.state;
-  if (st !== 'start') drawHUD();
+  if (menuBase() !== 'start') drawHUD();
 }
 
-/** Schulheft: Kästchen, roter Rand und Löcher – scrollt mit der Kamera. */
-function drawBackground() {
-  ctx.fillStyle = '#fbfaf0';
-  ctx.fillRect(-20, -20, W + 40, H + 40);
+/** Papier: Muster (Kästchen, Linien, Punkte, Millimeter), Rand und Löcher – scrollt mit der Kamera. */
+function drawPaper(pp, camY, w, h) {
+  ctx.fillStyle = pp.bg;
+  ctx.fillRect(-20, -20, w + 40, h + 40);
+  const s = pp.size;
+  const k0 = Math.floor(camY / s) - 1;
 
-  ctx.strokeStyle = 'rgba(110, 165, 220, 0.35)';
-  ctx.lineWidth = 1;
-  const off = (((-game.cameraY) % GRID) + GRID) % GRID;
-  ctx.beginPath();
-  for (let y = off - GRID; y <= H + 20; y += GRID) { ctx.moveTo(-20, y + 0.5); ctx.lineTo(W + 20, y + 0.5); }
-  for (let x = -GRID; x <= W + GRID; x += GRID) { ctx.moveTo(x + 0.5, -20); ctx.lineTo(x + 0.5, H + 20); }
-  ctx.stroke();
+  if (pp.style === 'dots') {
+    ctx.fillStyle = pp.line;
+    for (let k = k0; k * s - camY <= h + s; k++) {
+      for (let i = 0; i * s <= w + s; i++) {
+        ctx.beginPath(); ctx.arc(i * s, k * s - camY, 1.7, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  } else {
+    const grid = pp.style !== 'lines';
+    const mm = pp.style === 'mm';
+    for (let pass = 0; pass < (mm ? 2 : 1); pass++) {
+      ctx.strokeStyle = pass ? pp.heavy : pp.line;
+      ctx.lineWidth = pass ? 1.5 : 1;
+      ctx.beginPath();
+      for (let k = k0; k * s - camY <= h + s; k++) {
+        if (mm && (k % 5 === 0) !== (pass === 1)) continue;
+        const y = k * s - camY + 0.5;
+        ctx.moveTo(-20, y); ctx.lineTo(w + 20, y);
+      }
+      if (grid) {
+        for (let i = -1; i * s <= w + s; i++) {
+          if (mm && (i % 5 === 0) !== (pass === 1)) continue;
+          const x = i * s + 0.5;
+          ctx.moveTo(x, -20); ctx.lineTo(x, h + 20);
+        }
+      }
+      ctx.stroke();
+    }
+  }
 
-  ctx.strokeStyle = 'rgba(230, 90, 90, 0.5)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(MARGIN_X, -20);
-  ctx.lineTo(MARGIN_X, H + 20);
-  ctx.stroke();
-
-  // Lochung am linken Rand
-  const holeStep = 150;
-  const holeOff = (((-game.cameraY) % holeStep) + holeStep) % holeStep;
-  ctx.fillStyle = '#e4e1cf';
-  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-  ctx.lineWidth = 1.5;
-  for (let y = holeOff - holeStep; y < H + holeStep; y += holeStep) {
+  if (pp.margin) {
+    ctx.strokeStyle = pp.margin;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(20, y + 40, 8, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(MARGIN_X, -20);
+    ctx.lineTo(MARGIN_X, h + 20);
     ctx.stroke();
   }
+
+  if (pp.holes) {                                      // Lochung am linken Rand
+    const holeStep = 150;
+    const holeOff = (((-camY) % holeStep) + holeStep) % holeStep;
+    ctx.fillStyle = '#e4e1cf';
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1.5;
+    for (let y = holeOff - holeStep; y < h + holeStep; y += holeStep) {
+      ctx.beginPath();
+      ctx.arc(20, y + 40, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+}
+
+function drawBackground() { drawPaper(currentPaper(), game.cameraY, W, H); }
+
+/** Gestrichelte Linie in der Höhe deines bisherigen Highscores. */
+function drawRecordLine() {
+  const rec = game.recordScore;
+  if (!rec || menuBase() === 'start') return;
+  const y = START_FEET - rec / SCORE_PER_PIXEL - game.cameraY;
+  if (y < -30 || y > H + 30) return;
+  const beaten = game.score >= rec;
+  const col = beaten ? 'rgba(230,160,20,0.85)' : 'rgba(231,76,60,0.85)';
+  ctx.save();
+  ctx.setLineDash([10, 7]);
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.strokeStyle = col;
+  ctx.beginPath(); ctx.moveTo(-10, y); ctx.lineTo(W + 10, y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = "bold 15px 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive";
+  ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillStyle = beaten ? '#b87400' : '#c0392b';
+  const label = `Rekord: ${rec}`;
+  ctx.strokeText(label, W - 12, y - 7);
+  ctx.fillText(label, W - 12, y - 7);
+  ctx.restore();
 }
 
 function drawPlatforms() {
@@ -1079,6 +1279,25 @@ function drawShieldItem(cx, by) {
   ctx.beginPath(); ctx.arc(cx, by - 13 + bob, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(cx - 4, by - 17 + bob, 3, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawCoinShape(x, y, r, spin) {
+  const rx = Math.max(0.22, Math.abs(Math.cos(spin))) * r;   // dreht sich um die eigene Achse
+  ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(x, y, rx, r, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  if (rx > r * 0.55) {
+    ctx.strokeStyle = 'rgba(184,134,11,0.8)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(x, y, rx * 0.55, r * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+function drawCoins() {
+  const cam = game.cameraY;
+  for (const c of game.coinItems) {
+    const y = c.y - cam + (c.free ? 0 : Math.sin(game.time * 3 + c.t) * 2);
+    if (y < -20 || y > H + 20) continue;
+    drawCoinShape(c.x, y, 9, game.time * 4 + c.t);
+  }
 }
 
 function drawEnemies() {
@@ -1253,10 +1472,11 @@ function drawCharacter(p, px, feetY, time, sk) {
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.lineWidth = 2.5; ctx.strokeStyle = OUT;
 
-  // Füsse
+  // Füsse (mit "Grosse Füsse" deutlich grösser)
+  const fs = (game && p === game.player && abilityId === 'fuesse') ? 1.3 : 1;
   ctx.fillStyle = sk.feet;
   for (const fx of [-9, 9]) {
-    ctx.beginPath(); ctx.ellipse(fx + f * 2, up ? -4 : -3, 7, 3.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(fx * (fs > 1 ? 1.15 : 1) + f * 2, (up ? -4 : -3) - (fs - 1) * 2, 7 * fs, 3.6 * fs, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
   // Arme: nach oben beim Steigen, seitlich beim Fallen
@@ -1358,6 +1578,47 @@ function drawSkinTop(sk, p, f, front) {
     ctx.beginPath(); ctx.moveTo(0, -36); ctx.lineTo(ax, -51); ctx.stroke();
     ctx.fillStyle = sk.acc;
     ctx.beginPath(); ctx.arc(ax, -54, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else if (sk.top === 'curl' && !front) {          // Gespenst-Tolle
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, -38); ctx.quadraticCurveTo(8 + sway * 6, -46, 2, -52); ctx.quadraticCurveTo(-2, -55, -5, -51); ctx.stroke();
+  } else if (sk.top === 'bunny' && !front) {          // Hasenohren (wippen mit)
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * 8, -36); ctx.rotate(s * 0.22 + sway * s * 0.5);
+      ctx.fillStyle = sk.acc;
+      ctx.beginPath(); ctx.ellipse(0, -13, 5.5, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = sk.acc2;
+      ctx.beginPath(); ctx.ellipse(0, -12, 2.6, 9, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  } else if (sk.top === 'antennas' && !front) {      // Alien: zwei Fühler
+    for (const s of [-1, 1]) {
+      const tx = s * 11 + sway * s * 6;
+      ctx.beginPath(); ctx.moveTo(s * 5, -37); ctx.lineTo(tx, -52); ctx.stroke();
+      ctx.fillStyle = sk.acc;
+      ctx.beginPath(); ctx.arc(tx, -54, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+  } else if (sk.top === 'horns' && !front) {         // Drachen-Hörner
+    ctx.fillStyle = sk.acc;
+    for (const s of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(s * 3, -37); ctx.quadraticCurveTo(s * 15, -43, s * 12, -56);
+      ctx.quadraticCurveTo(s * 7, -44, s * 13, -36); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  } else if (sk.top === 'headband' && front) {       // Ninja-Stirnband mit flatternden Enden
+    ctx.save();
+    roundedRect(-18, -39, 36, 34, 15); ctx.clip();
+    ctx.fillStyle = sk.acc; ctx.fillRect(-20, -36, 40, 6);
+    ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-20, -36); ctx.lineTo(20, -36); ctx.moveTo(-20, -30); ctx.lineTo(20, -30); ctx.stroke();
+    ctx.restore();
+    const bx = -f * 17;
+    ctx.fillStyle = sk.acc; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(bx, -33); ctx.lineTo(bx - f * 12, -40 + sway * 4); ctx.lineTo(bx - f * 9, -33);
+    ctx.lineTo(bx - f * 13, -26 - sway * 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else if (sk.top === 'wizard' && front) {         // Zauberhut mit Stern
+    ctx.fillStyle = sk.acc;
+    ctx.beginPath(); ctx.moveTo(-15, -37); ctx.quadraticCurveTo(-2, -48, 4 + sway * 10, -66); ctx.quadraticCurveTo(8, -48, 15, -37); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, -37, 20, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = sk.acc2;
+    ctx.beginPath(); ctx.arc(2, -50, 2.6, 0, Math.PI * 2); ctx.fill();
   } else if (sk.top === 'bow' && front) {            // Schleife
     const bx = -f * 9, by = -40;
     ctx.fillStyle = sk.acc;
@@ -1395,8 +1656,15 @@ function drawHUD() {
   const best = `Best: ${Math.max(highscore, game.score)}`;
   ctx.strokeText(best, 15, 62);
   ctx.fillText(best, 15, 62);
+  drawCoinShape(23, 79, 8, 0);                          // Münzen dieser Runde
+  ctx.font = `bold 15px ${font}`;
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillStyle = '#2d3748';
+  ctx.strokeText(`× ${game.coins}`, 36, 85);
+  ctx.fillText(`× ${game.coins}`, 36, 85);
   const pl = game.player;
-  if (pl.shield > 0) {                                  // Schild-Restzeit
+  if (pl.shield > 0 && isFinite(pl.shield)) {           // Schild-Restzeit
     ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(15, 96, 60, 7);
     ctx.fillStyle = '#4dabf7'; ctx.fillRect(15, 96, 60 * pl.shield / SHIELD_TIME, 7);
   }
@@ -1408,11 +1676,29 @@ function drawHUD() {
 function showScreen(name) {
   el.btnPause.classList.toggle('paused', name === 'pause' || (name === 'skins' && game.skinFrom === 'paused'));
   for (const key in screens) screens[key].classList.toggle('hidden', key !== name);
+  updateMenuInfo();
 }
+
+/** Texte auf Start- und Game-Over-Bildschirm (Münzen, gewählte Fähigkeit). */
+function updateMenuInfo() {
+  const abil = `Fähigkeit: ${abilityName()}`;
+  el.chipCoins.textContent = fmt(coinTotal);
+  el.chipAbil.textContent = abil;
+  el.overGain.textContent = fmt(game.coins);
+  el.overTotal.textContent = fmt(coinTotal);
+  el.pauseScore.textContent = fmt(game.score);
+  el.pauseCoins.textContent = fmt(game.coins);
+  el.pauseAbil.textContent = abil;
+}
+
+/** Zahl mit Tausendertrennung (z. B. 100'000). */
+function fmt(n) { return Number(n).toLocaleString('de-CH'); }
 
 function startGame() {
   resetGame();
   game.state = 'playing';
+  if (abilityId === 'schild') game.player.shield = Infinity;   // bleibt, bis es einen Treffer abfängt
+  if (abilityId === 'schub')  { game.player.propTimer = START_PROP_TIME; game.player.vy = -PROPELLER_SPEED; }
   pointers.clear();
   showScreen(null);
 }
@@ -1458,10 +1744,12 @@ function endGame() {
   const before = totalPoints;
   totalPoints += game.score;
   storeSet(TOTAL_KEY, totalPoints);
-  const fresh = SKINS.filter(s => s.cost > before && s.cost <= totalPoints);
+  const fresh = SKINS.filter(s => s.cost > before && s.cost <= totalPoints && !isOwned('s:' + s.id));
   el.newSkin.textContent = fresh.length ? `Neuer Skin: ${fresh.map(s => s.name).join(', ')}!` : '';
   el.newSkin.classList.toggle('hidden', fresh.length === 0);
   el.overProgress.textContent = progressText();
+  coinTotal += game.coins;                         // gesammelte Münzen gutschreiben
+  storeSet(COIN_KEY, coinTotal);
   if (fresh.length) sfx.powerup();
   showScreen('over');
 }
@@ -1497,7 +1785,7 @@ function renderSkinMenu() {
   const next = nextLockedSkin();
   let pct = 100;
   if (next) {
-    const prev = SKINS.filter(isUnlocked).pop();
+    const prev = SKINS.filter(s => s.cost <= totalPoints).pop();
     pct = (totalPoints - prev.cost) / (next.cost - prev.cost) * 100;
   }
   el.skinBarFill.style.width = clamp(pct, 0, 100) + '%';
@@ -1521,7 +1809,7 @@ function renderSkinMenu() {
     name.textContent = sk.name;
     const state = document.createElement('span');
     state.className = 'skin-state';
-    state.textContent = !unlocked ? `ab ${sk.cost} Pkt.` : selected ? 'Gewählt' : 'Wählen';
+    state.textContent = !unlocked ? (sk.cost === Infinity ? 'Im Shop' : `ab ${sk.cost} Pkt.`) : selected ? 'Gewählt' : 'Wählen';
 
     card.append(cv, name, state);
     card.addEventListener('click', () => selectSkin(sk.id));
@@ -1570,6 +1858,196 @@ function handleSkinKey(e) {
   }
 }
 
+/* ---- Shop: Fähigkeiten & Papierarten ---- */
+let shopTab = 'abil';
+
+/** Zustand, der im Hintergrund weiterläuft, solange ein Menü offen ist. */
+function menuBase() {
+  return game.state === 'skins' ? game.skinFrom : game.state === 'shop' ? game.shopFrom : game.state;
+}
+
+function drawPaperPreview(cv, pp) {
+  const c = cv.getContext('2d');
+  const saved = ctx;
+  ctx = c;
+  try {
+    c.setTransform(2, 0, 0, 2, 0, 0);
+    c.beginPath(); c.rect(0, 0, 90, 44); c.clip();
+    drawPaper(pp, 40, 90, 44);
+  } finally {
+    ctx = saved;
+  }
+}
+
+/** Kleine Symbole für die Fähigkeiten im Shop. */
+function drawAbilityIcon(cv, id) {
+  const c = cv.getContext('2d');
+  const saved = ctx;
+  ctx = c;
+  try {
+    c.setTransform(2, 0, 0, 2, 0, 0);
+    c.lineJoin = 'round'; c.lineCap = 'round'; c.lineWidth = 2.5;
+    if (id === 'glueck') {                              // Glückspilz
+      c.fillStyle = '#fff3d6'; c.strokeStyle = '#8a4a12';
+      roundedRect(16, 24, 12, 15, 4); c.fill(); c.stroke();
+      c.fillStyle = '#e74c3c';
+      c.beginPath(); c.arc(22, 26, 17, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#fff';
+      for (const [x, y, r] of [[14, 20, 3.2], [26, 15, 3.6], [31, 22, 2.6]]) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+    } else if (id === 'magnet') {                       // Münzmagnet
+      const path = () => { c.beginPath(); c.moveTo(33, 9); c.lineTo(33, 24); c.arc(22, 24, 11, 0, Math.PI); c.lineTo(11, 9); };
+      c.strokeStyle = '#8c1c2b'; c.lineWidth = 12; path(); c.stroke();
+      c.strokeStyle = '#e74c3c'; c.lineWidth = 7.5; path(); c.stroke();
+      for (const x of [11, 33]) {
+        c.strokeStyle = '#4a5568'; c.lineWidth = 12; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, 15); c.stroke();
+        c.strokeStyle = '#e2e8f0'; c.lineWidth = 7.5; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, 15); c.stroke();
+      }
+    } else if (id === 'fuesse') {                       // Grosse Füsse
+      c.fillStyle = '#6cba34'; c.strokeStyle = '#2f6b1f';
+      for (const x of [14, 31]) { c.beginPath(); c.ellipse(x, 28, 9.5, 6, 0, 0, Math.PI * 2); c.fill(); c.stroke(); }
+    } else if (id === 'schild') {                       // Startschild
+      c.fillStyle = 'rgba(120,200,255,0.5)'; c.strokeStyle = '#2b6cb0';
+      c.beginPath(); c.arc(22, 22, 16, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(15, 15, 4, 0, Math.PI * 2); c.fill();
+    } else if (id === 'schub') {                        // Startschub
+      c.save(); c.translate(22, 35); c.scale(1.2, 1.2);
+      drawPropellerHat(0, 0, 0.8);
+      c.restore();
+    } else if (id === 'netz') {                         // Sicherheitsnetz
+      c.strokeStyle = '#4a5568'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(9, 28); c.lineTo(6, 39); c.moveTo(35, 28); c.lineTo(38, 39); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = 2.5;
+      c.beginPath(); c.ellipse(22, 24, 18, 7, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.save(); c.beginPath(); c.ellipse(22, 24, 18, 7, 0, 0, Math.PI * 2); c.clip();
+      c.lineWidth = 1.2; c.beginPath();
+      for (let k = -4; k <= 4; k++) {
+        c.moveTo(22 + k * 6 - 8, 16); c.lineTo(22 + k * 6 + 8, 32);
+        c.moveTo(22 + k * 6 + 8, 16); c.lineTo(22 + k * 6 - 8, 32);
+      }
+      c.stroke(); c.restore();
+    }
+  } finally {
+    ctx = saved;
+  }
+}
+
+/** Einträge des aktuellen Shop-Reiters. */
+function shopList() {
+  if (shopTab === 'abil')  return ABILITIES.map(it => ({ it, cost: it.cost, key: 'a:' + it.id, own: isOwned('a:' + it.id), sel: abilityId === it.id }));
+  if (shopTab === 'paper') return PAPERS.map(it => ({ it, cost: it.cost, key: 'p:' + it.id, own: isOwned('p:' + it.id), sel: paperId === it.id }));
+  return SKINS.filter(sk => sk.cost === Infinity).map(it => ({ it, cost: SKIN_COIN_PRICE[it.id] || 0, key: 's:' + it.id, own: isUnlocked(it), sel: skinId === it.id }));
+}
+
+function renderShop() {
+  const abil = shopTab === 'abil';
+  el.shopCoinNum.textContent = fmt(coinTotal);
+  el.tabAbil.classList.toggle('active', abil);
+  el.tabPaper.classList.toggle('active', shopTab === 'paper');
+  el.tabSkin.classList.toggle('active', shopTab === 'skin');
+  el.shopHint.textContent = abil ? 'Pro Spiel eine Fähigkeit – antippen zum Ausrüsten'
+    : shopTab === 'paper' ? 'Das Papier gilt für alle Runden'
+    : 'Diese Skins gibt es nur hier';
+  el.shopGrid.textContent = '';
+
+  for (const entry of shopList()) {
+    const { it, cost, own, sel } = entry;
+    const afford = coinTotal >= cost;
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.tabIndex = -1;
+    card.disabled = !own && !afford;
+    card.className = 'skin-card shop-card' + (sel ? ' selected' : '') + (!own && !afford ? ' locked' : '') + (!own && afford ? ' can-buy' : '');
+
+    const cv = document.createElement('canvas');
+    if (abil) {
+      cv.width = 88; cv.height = 88; cv.className = 'icon'; drawAbilityIcon(cv, it.id);
+    } else if (shopTab === 'paper') {
+      cv.width = 180; cv.height = 88; drawPaperPreview(cv, it);
+    } else {
+      cv.width = PREVIEW_W * 2; cv.height = PREVIEW_H * 2; cv.className = 'skinprev'; drawSkinPreview(cv, it, true);
+    }
+    card.append(cv);
+
+    const name = document.createElement('span');
+    name.className = 'skin-name';
+    name.textContent = it.name;
+    card.append(name);
+    if (abil) {
+      const desc = document.createElement('span');
+      desc.className = 'shop-desc';
+      desc.textContent = it.desc;
+      card.append(desc);
+    }
+    const state = document.createElement('span');
+    state.className = 'skin-state';
+    if (!own) {
+      state.classList.add('price');
+      const dot = document.createElement('i');
+      dot.className = 'coin-dot';
+      state.append(dot, String(cost));
+    } else {
+      state.textContent = sel ? (abil ? 'Ausgerüstet' : 'Gewählt') : (abil ? 'Ausrüsten' : 'Wählen');
+    }
+    card.append(state);
+    card.addEventListener('click', () => shopClick(entry));
+    el.shopGrid.appendChild(card);
+  }
+}
+
+function shopClick(entry) {
+  const { it, cost, key } = entry;
+  let bought = false;
+  if (!entry.own) {
+    if (coinTotal < cost) return;
+    coinTotal -= cost;
+    storeSet(COIN_KEY, coinTotal);
+    owned.push(key);
+    storeSet(OWNED_KEY, JSON.stringify(owned));
+    bought = true;
+  }
+  if (shopTab === 'abil') {
+    abilityId = (!bought && abilityId === it.id) ? '' : it.id;   // nochmal antippen = ablegen
+    storeSet(ABIL_KEY, abilityId);
+  } else if (shopTab === 'paper') {
+    paperId = it.id;
+    storeSet(PAPER_KEY, paperId);
+  } else {
+    skinId = it.id;
+    storeSet(SKIN_KEY, skinId);
+  }
+  bought ? sfx.powerup() : sfx.select();
+  renderShop();
+  updateMenuInfo();
+}
+
+function openShop() {
+  if (game.state !== 'start' && game.state !== 'over') return;
+  game.shopFrom = game.state;
+  game.state = 'shop';
+  pointers.clear();
+  renderShop();
+  showScreen('shop');
+}
+
+function closeShop() {
+  if (game.state !== 'shop') return;
+  game.state = game.shopFrom;
+  showScreen(game.state === 'start' ? 'start' : 'over');
+}
+
+function handleShopKey(e) {
+  switch (e.code) {
+    case 'ArrowLeft': case 'KeyA': case 'ArrowRight': case 'KeyD':
+      e.preventDefault();
+      { const tabs = ['abil', 'paper', 'skin'], d = (e.code === 'ArrowLeft' || e.code === 'KeyA') ? -1 : 1;
+        shopTab = tabs[(tabs.indexOf(shopTab) + d + tabs.length) % tabs.length]; renderShop(); }
+      break;
+    case 'Escape': case 'KeyB': case 'Space': case 'Enter':
+      e.preventDefault(); if (!e.repeat) closeShop(); break;
+    case 'KeyM': if (!e.repeat) toggleMute(); break;
+  }
+}
+
 /** Hauptschleife mit Delta-Time: Spiel läuft auf allen Bildschirmen gleich schnell. */
 function frame(now) {
   requestAnimationFrame(frame);
@@ -1577,7 +2055,7 @@ function frame(now) {
   const dt = clamp((now - lastTime) / 1000, 0, MAX_DT);
   lastTime = now;
 
-  const st = game.state === 'skins' ? game.skinFrom : game.state;   // im Skin-Menü läuft der Hintergrund weiter
+  const st = menuBase();   // in Skin-Menü und Shop läuft der Hintergrund weiter
   if (st === 'playing') update(dt);
   else if (st === 'start') updateIdle(dt);
   else if (st === 'over') updateParticles(dt);
