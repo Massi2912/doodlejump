@@ -59,6 +59,9 @@ const MAX_DX = 170;                            // max. seitlicher Versatz zur vo
 const MOVING_CHANCE_START = 0, MOVING_CHANCE_END = 0.4;
 const MOVING_SPEED_START = 40,    MOVING_SPEED_END = 120;
 const BREAKABLE_CHANCE_START = 0, BREAKABLE_CHANCE_END = 0.4;
+const CLOUD_CHANCE_START = 0.14, CLOUD_CHANCE_END = 0.28;   // Wolke: Teil des Wegs nach oben (Chance pro Reihe)
+const CLOUD_RAMP_PX = 8000;                              // so viele Pixel, bis die höchste Chance erreicht ist
+const CLOUD_FADE_TIME = 0.45;   // so schnell löst sich die Wolke auf
 
 // Power-Ups (Wahrscheinlichkeit pro Plattform)
 const SPRING_CHANCE = 0.06;
@@ -108,15 +111,24 @@ const SKINS = [
   { id: 'blaubeere', plat: ['#6fb7ff', '#2b6cb0'], move: ['#7ed957', '#3f8f2f'], name: 'Blaubeere', cost: 1000, top: 'leaves',
     body: ['#a9d4ff', '#4d8fe0'], out: '#1f3f7a', feet: '#3f7fd0', arm: '#8fc2ff',
     belly: 'rgba(235,245,255,0.6)', spot: 'rgba(30,70,150,0.3)', acc: '#58b82b', acc2: '#58b82b' },
+  { id: 'pirat', plat: ['#a0714a', '#4a2f1a'], name: 'Pirat', cost: 2000, top: 'pirate',
+    body: ['#ffd9b0', '#e09a5a'], out: '#4a2a12', feet: '#3b2a20', arm: '#f0b880',
+    belly: 'rgba(255,255,255,0.75)', spot: 'rgba(120,60,20,0.3)', acc: '#26232b', acc2: '#ffffff' },
   { id: 'kater', plat: ['#ffb866', '#c2701a'], name: 'Kater Karl', cost: 3000, top: 'ears',
     body: ['#ffd9a0', '#f0933a'], out: '#8a4a12', feet: '#e08a30', arm: '#ffc27a',
     belly: 'rgba(255,248,225,0.7)', spot: 'rgba(170,90,20,0.3)', acc: '#f0933a', acc2: '#ffb3c1' },
+  { id: 'pilz', plat: ['#d4a373', '#7a4a21'], name: 'Fliegenpilz', cost: 4500, top: 'mushroom',
+    body: ['#fff6e5', '#e9c9a0'], out: '#7a2a2a', feet: '#e8c9a0', arm: '#f6dfbb',
+    belly: 'rgba(255,255,255,0.8)', spot: 'rgba(200,120,60,0.3)', acc: '#e53e3e', acc2: '#ffffff' },
   { id: 'zuckerwatte', plat: ['#ff9ccb', '#c2407f'], name: 'Zuckerwatte', cost: 6000, top: 'bow',
     body: ['#ffd0e6', '#f06fa8'], out: '#8c2a5b', feet: '#e0568f', arm: '#ffb0d3',
     belly: 'rgba(255,245,250,0.7)', spot: 'rgba(170,40,100,0.28)', acc: '#7c5cff', acc2: '#ffd23f' },
   { id: 'robo', plat: ['#b9c4d0', '#5b6878'], name: 'Robo-Bot', cost: 12000, top: 'antenna',
     body: ['#e3e9f0', '#8e9bab'], out: '#39434f', feet: '#7a8797', arm: '#c3ccd6',
     belly: 'rgba(100,200,255,0.55)', spot: 'rgba(40,50,60,0.3)', acc: '#ff5a5f', acc2: '#4a5568' },
+  { id: 'einhorn', plat: ['#f6c6ff', '#9b59b6'], name: 'Einhorn', cost: 18000, top: 'unicorn',
+    body: ['#ffffff', '#f5d0ff'], out: '#8e4a9e', feet: '#e8b4f5', arm: '#fbe3ff',
+    belly: 'rgba(255,240,255,0.85)', spot: 'rgba(170,90,200,0.28)', acc: '#ffd23f', acc2: '#ffffff' },
   { id: 'koenig', plat: ['#ffd84d', '#b8860b'], name: 'Königlich', cost: 25000, top: 'crown',
     body: ['#fff0a8', '#e8b820'], out: '#8a6208', feet: '#d9a516', arm: '#ffe27a',
     belly: 'rgba(255,252,225,0.7)', spot: 'rgba(170,120,10,0.3)', acc: '#ffd23f', acc2: '#e74c3c' },
@@ -346,6 +358,7 @@ function resetGame() {
   game = {
     state: 'start',
     skinFrom: 'start',              // von wo das Skin-Menü geöffnet wurde
+    cloudGap: 0,                    // Lücke der letzten Wolke (0 = keine)
     shopFrom: 'start',              // von wo der Shop geöffnet wurde
     coinItems: [],                  // Münzen auf den Plattformen
     coins: 0,                       // in dieser Runde gesammelt
@@ -540,22 +553,27 @@ function spawnRow() {
   const d = difficultyAt(heightRow);
 
   // Abstand: wächst mit der Höhe, bleibt aber unter MAX_SAFE_GAP
-  const gapMax = Math.min(lerp(GAP_MAX_START, GAP_MAX_END, d), MAX_SAFE_GAP);
+  // Nach einer Wolke bleibt (Wolke-Lücke + diese Lücke) unter der Sprunghöhe, falls man
+  // unter die Wolke fällt und sie schon weg ist: dann reicht ein Sprung von unten zur nächsten Plattform
+  const cloudBudget = game.cloudGap ? MAX_SAFE_GAP - game.cloudGap : Infinity;
+  const gapMax = Math.min(lerp(GAP_MAX_START, GAP_MAX_END, d), MAX_SAFE_GAP, cloudBudget);
   const gapMin = Math.min(lerp(GAP_MIN_START, GAP_MIN_END, d), gapMax);
-  const gap = rand(gapMin, gapMax);
+  const cloud = !game.cloudGap && heightRow > EASY_ZONE && chance(lerp(CLOUD_CHANCE_START, CLOUD_CHANCE_END, clamp(heightRow / CLOUD_RAMP_PX, 0, 1)));
+  const gap = cloud ? Math.min(rand(gapMin, gapMax), MAX_SAFE_GAP * 0.5) : rand(gapMin, gapMax);
+  const afterCloud = !!game.cloudGap;
   const y = game.topY - gap;
 
   // Seitlicher Versatz begrenzt, damit der Weg machbar bleibt
-  const dx = lerp(110, MAX_DX, d);
+  const dx = (cloud || afterCloud ? 0.6 : 1) * lerp(110, MAX_DX, d);
   const x = rand(Math.max(0, game.lastX - dx), Math.min(W - PLATFORM_W, game.lastX + dx));
 
-  const moving = heightRow > EASY_ZONE && chance(lerp(MOVING_CHANCE_START, MOVING_CHANCE_END, d));
-  const pl = makePlatform(x, y, moving ? 'moving' : 'normal');
+  const moving = !cloud && heightRow > EASY_ZONE && chance(lerp(MOVING_CHANCE_START, MOVING_CHANCE_END, d));
+  const pl = makePlatform(x, y, moving ? 'moving' : cloud ? 'cloud' : 'normal');
   if (moving) {
     pl.vx = (chance(0.5) ? 1 : -1) * lerp(MOVING_SPEED_START, MOVING_SPEED_END, d) * rand(0.8, 1.2);
   }
 
-  spawnPowerup(pl, moving, heightRow);
+  if (!cloud) spawnPowerup(pl, moving, heightRow);
   game.platforms.push(pl);
 
   // Zusätzliche, zerbrechliche Falle
@@ -563,7 +581,7 @@ function spawnRow() {
 
   // Gegner erst ab ENEMY_START_SCORE
   let enemyMade = false;
-  if (heightRow * SCORE_PER_PIXEL >= ENEMY_START_SCORE &&
+  if (!cloud && heightRow * SCORE_PER_PIXEL >= ENEMY_START_SCORE &&
       chance(lerp(ENEMY_CHANCE_START, ENEMY_CHANCE_END, d))) {
     enemyMade = spawnEnemy(pl, moving, y, gap, heightRow * SCORE_PER_PIXEL);
   }
@@ -577,6 +595,7 @@ function spawnRow() {
     spawnCoin(pl);
   }
 
+  game.cloudGap = cloud ? gap : 0;
   game.topY = y;
   game.lastX = x;
 }
@@ -793,6 +812,11 @@ function updateIdle(dt) {
 
 function updatePlatforms(dt) {
   for (const pl of game.platforms) {
+    if (pl.type === 'cloud' && pl.vanishing) {        // Wolke löst sich auf
+      pl.fade += dt;
+      if (pl.fade >= CLOUD_FADE_TIME) pl.broken = true;
+      continue;
+    }
     if (pl.type !== 'moving') continue;
     pl.x += pl.vx * dt;
     if (pl.x < 0) { pl.x = 0; pl.vx = Math.abs(pl.vx); }
@@ -931,7 +955,7 @@ function checkPlatformCollisions(prevFeet) {
   let hit = null;
 
   for (const pl of game.platforms) {
-    if (pl.broken) continue;
+    if (pl.broken || pl.vanishing) continue;
     if (prevFeet <= pl.y + 2 && feet >= pl.y) {
       // horizontaler Abstand, wrap-sicher
       let dx = p.x - (pl.x + PLATFORM_W / 2);
@@ -973,6 +997,11 @@ function landOn(pl) {
   bounce(JUMP_VELOCITY, 0.28);
   sfx.jump();
   spawnDust(p.x, pl.y, 4);
+  if (pl.type === 'cloud') {                // Wolke: einmal abspringen, dann weg
+    pl.vanishing = true;
+    pl.fade = 0;
+    spawnParticles(pl.x + PLATFORM_W / 2, pl.y + 4, 10, ['#ffffff', '#e6f0ff', '#cfe0f5'], 120);
+  }
 }
 
 function bounce(vy, amp) {
@@ -1211,6 +1240,19 @@ function drawPlatforms() {
       ctx.moveTo(cx - 6, cy); ctx.lineTo(cx - 14, cy - 4); ctx.lineTo(cx - 14, cy + 4);
       ctx.moveTo(cx + 6, cy); ctx.lineTo(cx + 14, cy - 4); ctx.lineTo(cx + 14, cy + 4);
       ctx.fill();
+    } else if (pl.type === 'cloud') {
+      const a = pl.vanishing ? Math.max(0, 1 - pl.fade / CLOUD_FADE_TIME) : 1;
+      const rise = pl.vanishing ? pl.fade * 18 : 0;     // steigt beim Auflösen leicht auf
+      const cy = y + PLATFORM_H / 2 - rise;
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#9db4d0'; ctx.lineWidth = 2.5;
+      const puffs = [[11, 2, 9], [24, -3, 11], [38, -2, 11], [51, 2, 9], [31, 3, 12]];
+      ctx.beginPath();
+      for (const [dx, dy, r] of puffs) { ctx.moveTo(x + dx + r, cy + dy); ctx.arc(x + dx, cy + dy, r, 0, Math.PI * 2); }
+      ctx.stroke();                                    // Umriss unter den Füllungen
+      for (const [dx, dy, r] of puffs) { ctx.beginPath(); ctx.arc(x + dx, cy + dy, r - 1, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
     } else {                                           // breakable
       ctx.fillStyle = '#c08a54'; ctx.strokeStyle = '#7a5230';
       roundedRect(x, y, PLATFORM_W, PLATFORM_H, 4); ctx.fill(); ctx.stroke();
@@ -1619,6 +1661,53 @@ function drawSkinTop(sk, p, f, front) {
     ctx.beginPath(); ctx.ellipse(0, -37, 20, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = sk.acc2;
     ctx.beginPath(); ctx.arc(2, -50, 2.6, 0, Math.PI * 2); ctx.fill();
+  } else if (sk.top === 'pirate' && front) {         // Pirat: Dreispitz mit Totenkopf + Augenklappe
+    const ex0 = -6 + f * 4;
+    ctx.lineWidth = 2.2; ctx.strokeStyle = sk.out;                  // Band der Augenklappe
+    ctx.beginPath(); ctx.moveTo(ex0 + 3, -33); ctx.lineTo(18, -37); ctx.moveTo(ex0 - 4, -31); ctx.lineTo(-18, -33); ctx.stroke();
+    ctx.fillStyle = '#15131a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(ex0, -28, 6.8, 6.2, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = sk.out; ctx.fillStyle = sk.acc;
+    ctx.beginPath(); ctx.moveTo(-19, -38); ctx.quadraticCurveTo(-19, -57, 0, -55); ctx.quadraticCurveTo(19, -57, 19, -38); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-27, -34); ctx.quadraticCurveTo(-20, -44, -13, -40);
+    ctx.quadraticCurveTo(0, -36, 13, -40); ctx.quadraticCurveTo(20, -44, 27, -34);
+    ctx.quadraticCurveTo(0, -32, -27, -34); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = sk.acc2; ctx.strokeStyle = sk.acc2; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(0, -48, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-5, -43); ctx.lineTo(5, -45); ctx.moveTo(5, -43); ctx.lineTo(-5, -45); ctx.stroke();
+    ctx.fillStyle = sk.acc;
+    ctx.beginPath(); ctx.arc(-1.4, -48.3, 0.9, 0, 7); ctx.arc(1.4, -48.3, 0.9, 0, 7); ctx.fill();
+  } else if (sk.top === 'mushroom' && front) {       // Fliegenpilz-Hut mit weissen Punkten
+    ctx.fillStyle = sk.acc;
+    ctx.beginPath(); ctx.moveTo(-26, -34); ctx.quadraticCurveTo(-27, -64, 0, -63); ctx.quadraticCurveTo(27, -64, 26, -34);
+    ctx.quadraticCurveTo(0, -29, -26, -34); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = sk.acc2; ctx.lineWidth = 1.6;
+    for (const [dx, dy, r] of [[-13, -46, 5], [2, -55, 5.6], [15, -46, 4.4], [-2, -41, 2.8], [-20, -39, 2.6], [21, -38, 2.4]]) {
+      ctx.beginPath(); ctx.arc(dx, dy, r, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (sk.top === 'unicorn') {                 // Einhorn: Regenbogen-Mähne hinten, goldenes Horn vorn
+    if (!front) {
+      const cols = ['#ff5a5f', '#ffa94d', '#ffe066', '#69db7c', '#4dabf7', '#9775fa'];
+      for (const [w, pass] of [[6.4, 0], [3.2, 1]]) {
+        cols.forEach((c, k) => {
+          ctx.strokeStyle = pass ? c : sk.out; ctx.lineWidth = w;
+          const sx = -f * (3 + k * 3), ex = -f * (11 + k * 3.2);
+          ctx.beginPath(); ctx.moveTo(sx, -38);
+          ctx.quadraticCurveTo(-f * (11 + k * 3) - sway * 8, -50 + k * 1.5, ex, -22 + k * 3 + sway * 6); ctx.stroke();
+        });
+      }
+    } else {
+      ctx.fillStyle = sk.acc; ctx.strokeStyle = '#a07400'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(-5.5, -37); ctx.lineTo(0, -61 + sway * 4); ctx.lineTo(5.5, -37); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 1.6; ctx.beginPath();
+      for (const t of [0.25, 0.5, 0.75]) { const y = -37 - 24 * t, w = 5.5 * (1 - t); ctx.moveTo(-w, y + 2); ctx.lineTo(w, y - 2); }
+      ctx.stroke();
+      const tw = 0.5 + 0.5 * Math.sin(performance.now() / 180);          // funkelnder Stern
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.2;
+      const sx = 14, sy = -50, r = 2.5 + tw * 3;
+      ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx + r * 0.3, sy - r * 0.3); ctx.lineTo(sx + r, sy); ctx.lineTo(sx + r * 0.3, sy + r * 0.3);
+      ctx.lineTo(sx, sy + r); ctx.lineTo(sx - r * 0.3, sy + r * 0.3); ctx.lineTo(sx - r, sy); ctx.lineTo(sx - r * 0.3, sy - r * 0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
   } else if (sk.top === 'bow' && front) {            // Schleife
     const bx = -f * 9, by = -40;
     ctx.fillStyle = sk.acc;
