@@ -111,27 +111,37 @@ const SKINS = [
   { id: 'blaubeere', plat: ['#6fb7ff', '#2b6cb0'], move: ['#7ed957', '#3f8f2f'], name: 'Blaubeere', cost: 1000, top: 'leaves',
     body: ['#a9d4ff', '#4d8fe0'], out: '#1f3f7a', feet: '#3f7fd0', arm: '#8fc2ff',
     belly: 'rgba(235,245,255,0.6)', spot: 'rgba(30,70,150,0.3)', acc: '#58b82b', acc2: '#58b82b' },
-  { id: 'pirat', plat: ['#a0714a', '#4a2f1a'], name: 'Pirat', cost: 2000, top: 'pirate',
-    body: ['#ffd9b0', '#e09a5a'], out: '#4a2a12', feet: '#3b2a20', arm: '#f0b880',
-    belly: 'rgba(255,255,255,0.75)', spot: 'rgba(120,60,20,0.3)', acc: '#26232b', acc2: '#ffffff' },
   { id: 'kater', plat: ['#ffb866', '#c2701a'], name: 'Kater Karl', cost: 3000, top: 'ears',
     body: ['#ffd9a0', '#f0933a'], out: '#8a4a12', feet: '#e08a30', arm: '#ffc27a',
     belly: 'rgba(255,248,225,0.7)', spot: 'rgba(170,90,20,0.3)', acc: '#f0933a', acc2: '#ffb3c1' },
-  { id: 'pilz', plat: ['#d4a373', '#7a4a21'], name: 'Fliegenpilz', cost: 4500, top: 'mushroom',
-    body: ['#fff6e5', '#e9c9a0'], out: '#7a2a2a', feet: '#e8c9a0', arm: '#f6dfbb',
-    belly: 'rgba(255,255,255,0.8)', spot: 'rgba(200,120,60,0.3)', acc: '#e53e3e', acc2: '#ffffff' },
   { id: 'zuckerwatte', plat: ['#ff9ccb', '#c2407f'], name: 'Zuckerwatte', cost: 6000, top: 'bow',
     body: ['#ffd0e6', '#f06fa8'], out: '#8c2a5b', feet: '#e0568f', arm: '#ffb0d3',
     belly: 'rgba(255,245,250,0.7)', spot: 'rgba(170,40,100,0.28)', acc: '#7c5cff', acc2: '#ffd23f' },
   { id: 'robo', plat: ['#b9c4d0', '#5b6878'], name: 'Robo-Bot', cost: 12000, top: 'antenna',
     body: ['#e3e9f0', '#8e9bab'], out: '#39434f', feet: '#7a8797', arm: '#c3ccd6',
     belly: 'rgba(100,200,255,0.55)', spot: 'rgba(40,50,60,0.3)', acc: '#ff5a5f', acc2: '#4a5568' },
-  { id: 'einhorn', plat: ['#f6c6ff', '#9b59b6'], name: 'Einhorn', cost: 18000, top: 'unicorn',
-    body: ['#ffffff', '#f5d0ff'], out: '#8e4a9e', feet: '#e8b4f5', arm: '#fbe3ff',
-    belly: 'rgba(255,240,255,0.85)', spot: 'rgba(170,90,200,0.28)', acc: '#ffd23f', acc2: '#ffffff' },
   { id: 'koenig', plat: ['#ffd84d', '#b8860b'], name: 'Königlich', cost: 25000, top: 'crown',
     body: ['#fff0a8', '#e8b820'], out: '#8a6208', feet: '#d9a516', arm: '#ffe27a',
     belly: 'rgba(255,252,225,0.7)', spot: 'rgba(170,120,10,0.3)', acc: '#ffd23f', acc2: '#e74c3c' },
+  // Nur aus Boxen (Shop) zu bekommen: box = Seltenheit
+  { id: 'pirat', plat: ['#a0714a', '#4a2f1a'], name: 'Pirat', cost: Infinity, box: 'common', top: 'pirate',
+    body: ['#ffd9b0', '#e09a5a'], out: '#4a2a12', feet: '#3b2a20', arm: '#f0b880',
+    belly: 'rgba(255,255,255,0.75)', spot: 'rgba(120,60,20,0.3)', acc: '#26232b', acc2: '#ffffff' },
+  { id: 'pilz', plat: ['#d4a373', '#7a4a21'], name: 'Fliegenpilz', cost: Infinity, box: 'common', top: 'mushroom',
+    body: ['#fff6e5', '#e9c9a0'], out: '#7a2a2a', feet: '#e8c9a0', arm: '#f6dfbb',
+    belly: 'rgba(255,255,255,0.8)', spot: 'rgba(200,120,60,0.3)', acc: '#e53e3e', acc2: '#ffffff' },
+  { id: 'biene', plat: ['#ffe066', '#b8860b'], name: 'Biene', cost: Infinity, box: 'rare', top: 'bee',
+    body: ['#fff3a0', '#ffd23f'], out: '#5a3d00', feet: '#3a2a00', arm: '#ffe27a',
+    belly: 'rgba(255,248,200,0.7)', spot: 'rgba(150,100,0,0.3)', acc: '#2b2100', acc2: 'rgba(225,242,255,0.8)' },
+  { id: 'kuerbis', plat: ['#ff9f43', '#a04a0a'], name: 'Kürbis', cost: Infinity, box: 'rare', top: 'pumpkin',
+    body: ['#ffb347', '#e8731a'], out: '#7a3a0a', feet: '#d9650f', arm: '#ffa94d',
+    belly: 'rgba(255,224,170,0.6)', spot: 'rgba(130,60,10,0.3)', acc: '#4c9a2a', acc2: '#2f6b1f' },
+  { id: 'einhorn', plat: ['#f6c6ff', '#9b59b6'], name: 'Einhorn', cost: Infinity, box: 'epic', top: 'unicorn',
+    body: ['#ffffff', '#f5d0ff'], out: '#8e4a9e', feet: '#e8b4f5', arm: '#fbe3ff',
+    belly: 'rgba(255,240,255,0.85)', spot: 'rgba(170,90,200,0.28)', acc: '#ffd23f', acc2: '#ffffff' },
+  { id: 'vampir', plat: ['#8b5a8f', '#3a1f45'], name: 'Vampir', cost: Infinity, box: 'epic', top: 'vampire',
+    body: ['#f1ecf7', '#bba9d2'], out: '#2d1b3d', feet: '#2d2433', arm: '#ddd3ea',
+    belly: 'rgba(255,255,255,0.7)', spot: 'rgba(80,40,100,0.3)', acc: '#1a1420', acc2: '#b3122f' },
   // Nur im Shop mit Münzen kaufbar (cost: Infinity = nicht über Punkte freischaltbar)
   { id: 'geist', plat: ['#e8eef7', '#8a97ab'], name: 'Gespenst', cost: Infinity, top: 'curl',
     body: ['#ffffff', '#cfd8e8'], out: '#5b6b86', feet: '#e2e8f2', arm: '#f1f5fb',
@@ -171,6 +181,17 @@ const ABILITIES = [
   { id: 'netz',    name: 'Sicherheitsnetz', cost: 200, desc: 'Rettet 1× vor Sturz/Treffer' }
 ];
 const START_PROP_TIME   = 6;
+
+// Boxen (Glückssystem): kosten Münzen und geben zufällig einen Box-Skin. Doppelte geben Münzen zurück.
+const BOX_TIERS = {
+  common: { name: 'Gewöhnlich', color: '#3f9d55', refund: 12 },
+  rare:   { name: 'Selten',     color: '#3b82f6', refund: 25 },
+  epic:   { name: 'Episch',     color: '#a855f7', refund: 50 }
+};
+const BOXES = [
+  { id: 'box1', name: 'Zufalls-Box', cost: 40,  odds: { common: 70, rare: 25, epic: 5 },  colors: ['#6bb8ff', '#1c6fc2'], ribbon: '#ffffff' },
+  { id: 'box2', name: 'Gold-Box',    cost: 100, odds: { common: 30, rare: 45, epic: 25 }, colors: ['#ffe066', '#d49a00'], ribbon: '#e74c3c' }
+];
 
 // Preise der Shop-Skins (nur diese Skins gibt es im Shop; die anderen schaltest du über Punkte frei)
 const SKIN_COIN_PRICE = { geist: 20, hase: 30, ninja: 45, alien: 60, zauberer: 80, drache: 100 };
@@ -264,6 +285,15 @@ const el = {
   tabAbil:      document.getElementById('tab-abil'),
   tabPaper:     document.getElementById('tab-paper'),
   tabSkin:      document.getElementById('tab-skin'),
+  tabBox:       document.getElementById('tab-box'),
+  reveal:       document.getElementById('box-reveal'),
+  revealFx:     document.getElementById('reveal-fx'),
+  revealResult: document.getElementById('reveal-result'),
+  revealTier:   document.getElementById('reveal-tier'),
+  revealName:   document.getElementById('reveal-name'),
+  revealNote:   document.getElementById('reveal-note'),
+  btnRevealEquip: document.getElementById('btn-reveal-equip'),
+  btnRevealClose: document.getElementById('btn-reveal-close'),
   shopCoins:    document.getElementById('shop-coins'),
   shopHint:     document.getElementById('shop-hint'),
   shopGrid:     document.getElementById('shop-grid')
@@ -302,6 +332,9 @@ const COIN_KEY = 'huepfKritzelCoins', OWNED_KEY = 'huepfKritzelOwned';
 const PAPER_KEY = 'huepfKritzelPaper', ABIL_KEY = 'huepfKritzelAbility';
 let coinTotal = Math.max(START_COINS, parseInt(storeGet(COIN_KEY), 10) || 0);
 let owned = (() => { try { const a = JSON.parse(storeGet(OWNED_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; } })();
+// Box-Garantie: Anzahl Boxen in Folge ohne neuen Skin (nach BOX_PITY Boxen ohne Neuen ist die nächste garantiert neu)
+const PITY_KEY = 'huepfKritzelBoxPity', BOX_PITY = 5;
+let boxPity = Math.max(0, parseInt(storeGet(PITY_KEY), 10) || 0);
 const isOwned = key => key === 'p:kariert' || owned.includes(key);
 let paperId = (() => { const k = storeGet(PAPER_KEY); return PAPERS.some(x => x.id === k) && isOwned('p:' + k) ? k : 'kariert'; })();
 let abilityId = (() => { const k = storeGet(ABIL_KEY); return ABILITIES.some(x => x.id === k) && isOwned('a:' + k) ? k : ''; })();
@@ -422,6 +455,13 @@ function tone(from, to, dur, type = 'sine', vol = 0.15, delay = 0) {
 
 const sfx = {
   coin:     () => { tone(988, 988, 0.07, 'square', 0.05); tone(1319, 1319, 0.14, 'square', 0.05, 0.06); },
+  boxTick:  () => tone(420, 380, 0.05, 'square', 0.035),
+  boxLand:  () => { tone(150, 60, 0.18, 'sine', 0.2); tone(300, 120, 0.1, 'triangle', 0.08); },
+  boxBurst: () => { tone(180, 1100, 0.4, 'sawtooth', 0.07); tone(90, 40, 0.5, 'sine', 0.22); tone(1400, 1400, 0.25, 'triangle', 0.05, 0.12); },
+  fanfare:  n => {                                   // n: 0 gewöhnlich, 1 selten, 2 episch
+    const notes = [[523, 659, 784], [523, 659, 784, 1047], [523, 659, 784, 1047, 1319, 1568]][n];
+    notes.forEach((f, i) => { tone(f, f, 0.18, 'square', 0.05, i * 0.1); tone(f * 2, f * 2, 0.22, 'triangle', 0.03, i * 0.1); });
+  },
   jump:     () => tone(380, 720, 0.12, 'sine', 0.14),
   select:   () => { tone(520, 780, 0.08, 'triangle', 0.12); tone(780, 1040, 0.1, 'triangle', 0.12, 0.07); },
   spring:   () => { tone(300, 1000, 0.28, 'square', 0.07); tone(500, 1400, 0.2, 'sine', 0.1, 0.05); },
@@ -528,6 +568,10 @@ el.btnShopClose.addEventListener('click', () => { closeShop(); });
 el.tabAbil.addEventListener('click',  () => { shopTab = 'abil';  renderShop(); });
 el.tabPaper.addEventListener('click', () => { shopTab = 'paper'; renderShop(); });
 el.tabSkin.addEventListener('click',  () => { shopTab = 'skin';  renderShop(); });
+el.tabBox.addEventListener('click',   () => { shopTab = 'box';   renderShop(); });
+el.btnRevealClose.addEventListener('click', () => { closeReveal(); });
+el.reveal.addEventListener('click', e => { if (!e.target.closest('button')) skipReveal(); });
+el.btnRevealEquip.addEventListener('click', () => { equipRevealed(); });
 
 /* ---------------------------------------------------------------------
    6. SPAWN (Plattformen, Power-Ups, Gegner)
@@ -1708,6 +1752,59 @@ function drawSkinTop(sk, p, f, front) {
       ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx + r * 0.3, sy - r * 0.3); ctx.lineTo(sx + r, sy); ctx.lineTo(sx + r * 0.3, sy + r * 0.3);
       ctx.lineTo(sx, sy + r); ctx.lineTo(sx - r * 0.3, sy + r * 0.3); ctx.lineTo(sx - r, sy); ctx.lineTo(sx - r * 0.3, sy - r * 0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
+  } else if (sk.top === 'bee') {                     // Biene: Flügel hinten, Fühler + Streifen vorn
+    if (!front) {
+      const flap = Math.sin(performance.now() / 55) * 0.22;
+      ctx.fillStyle = sk.acc2; ctx.strokeStyle = sk.out; ctx.lineWidth = 2;
+      for (const s of [-1, 1]) {
+        ctx.save(); ctx.translate(s * 13, -34); ctx.rotate(s * (0.65 + flap));
+        ctx.beginPath(); ctx.ellipse(0, -10, 6.5, 13, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
+      }
+    } else {
+      ctx.save(); roundedRect(-18, -39, 36, 34, 15); ctx.clip();       // Streifen am Hinterleib
+      ctx.fillStyle = 'rgba(43,33,0,0.88)';
+      ctx.fillRect(-20, -14, 40, 3.6); ctx.fillRect(-20, -8.2, 40, 3.2);
+      ctx.restore();
+      ctx.strokeStyle = sk.acc; ctx.lineWidth = 2;
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(s * 5, -38); ctx.quadraticCurveTo(s * 9, -48, s * 14 + sway * 5 * s, -51); ctx.stroke();
+        ctx.fillStyle = sk.acc; ctx.beginPath(); ctx.arc(s * 14 + sway * 5 * s, -52, 3, 0, Math.PI * 2); ctx.fill();
+      }
+      const wig = sway * 2;                                                            // Stachel: winzig, rund, nach oben geringelt
+      ctx.fillStyle = '#4a3500'; ctx.strokeStyle = sk.out; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(-f * 15, -12);
+      ctx.quadraticCurveTo(-f * 20, -10, -f * 24.5, -13.5 + wig);                      // sanft nach oben gebogen
+      ctx.quadraticCurveTo(-f * 21, -5.5, -f * 15, -6.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,226,122,0.9)';                                          // Glanzpünktchen
+      ctx.beginPath(); ctx.arc(-f * 18.5, -9.4, 1.1, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (sk.top === 'pumpkin' && front) {        // Kürbis: Stiel, Blatt, Rippen
+    ctx.strokeStyle = 'rgba(122,58,10,0.4)'; ctx.lineWidth = 2;
+    for (const s of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(s * 14, -37); ctx.quadraticCurveTo(s * 21, -22, s * 14, -7); ctx.stroke();
+    }
+    ctx.lineWidth = 2.5; ctx.strokeStyle = sk.out; ctx.fillStyle = sk.acc2;
+    ctx.beginPath(); ctx.moveTo(-3.5, -37); ctx.lineTo(-4.5, -47); ctx.quadraticCurveTo(0, -52, 5.5, -46 + sway * 4); ctx.lineTo(3.5, -37); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = sk.acc;
+    ctx.save(); ctx.translate(7, -41); ctx.rotate(-0.55 + sway * 0.6);
+    ctx.beginPath(); ctx.ellipse(5, 0, 7.5, 3.4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = sk.acc2; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-3, -42); ctx.bezierCurveTo(-12, -44, -14, -52, -8, -52); ctx.bezierCurveTo(-4, -52, -4, -47, -8, -47); ctx.stroke();
+  } else if (sk.top === 'vampire') {                 // Vampir: Cape hinten, Haare + Reisszähne vorn
+    if (!front) {
+      ctx.fillStyle = sk.acc2; ctx.strokeStyle = sk.out; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(-15, -34); ctx.lineTo(-23, -8); ctx.quadraticCurveTo(0, -3, 23, -8); ctx.lineTo(15, -34); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(-14, -30, 28, 20);
+    } else {
+      ctx.fillStyle = sk.acc; ctx.strokeStyle = sk.out; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(-18, -32); ctx.quadraticCurveTo(-21, -49, 0, -47); ctx.quadraticCurveTo(21, -49, 18, -32);
+      ctx.lineTo(10, -37); ctx.lineTo(0, -34); ctx.lineTo(-10, -37); ctx.closePath(); ctx.fill(); ctx.stroke();
+      const mx = 0.5 + f * 5;
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = sk.out; ctx.lineWidth = 1.4;
+      for (const d of [-3.8, 1.6]) {
+        ctx.beginPath(); ctx.moveTo(mx + d, -17); ctx.lineTo(mx + d + 2.4, -17); ctx.lineTo(mx + d + 1.2, -11.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    }
   } else if (sk.top === 'bow' && front) {            // Schleife
     const bx = -f * 9, by = -40;
     ctx.fillStyle = sk.acc;
@@ -1852,6 +1949,8 @@ function drawSkinPreview(cv, sk, unlocked) {
   const saved = ctx;
   ctx = c;                                   // die Zeichenfunktionen benutzen das globale ctx
   try {
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, cv.width, cv.height);  // altes Bild löschen (Canvas wird bei der Box-Öffnung wiederverwendet)
     c.setTransform(2, 0, 0, 2, 0, 0);
     const dummy = { vx: 0, vy: -200, facing: 1, propTimer: 0, jetTimer: 0, shield: 0,
                     invuln: 0, squashT: 9, squashAmp: 0, dead: false };
@@ -1898,7 +1997,7 @@ function renderSkinMenu() {
     name.textContent = sk.name;
     const state = document.createElement('span');
     state.className = 'skin-state';
-    state.textContent = !unlocked ? (sk.cost === Infinity ? 'Im Shop' : `ab ${sk.cost} Pkt.`) : selected ? 'Gewählt' : 'Wählen';
+    state.textContent = !unlocked ? (sk.cost === Infinity ? (sk.box ? 'Aus Boxen' : 'Im Shop') : `ab ${sk.cost} Pkt.`) : selected ? 'Gewählt' : 'Wählen';
 
     card.append(cv, name, state);
     card.addEventListener('click', () => selectSkin(sk.id));
@@ -2020,11 +2119,412 @@ function drawAbilityIcon(cv, id) {
   }
 }
 
+/* ---- Boxen (Glückssystem) ---- */
+let boxBusy = false, revealReady = false, revealSkinObj = null;
+const boxSkins = () => SKINS.filter(sk => sk.box);
+
+/** Zieht zufällig einen Box-Skin: erst die Seltenheit nach den Chancen der Box, dann ein Skin davon. */
+function rollBox(box, guaranteeNew = false) {
+  const tiers = ['common', 'rare', 'epic'];
+  const avail = t => boxSkins().filter(sk => sk.box === t && (!guaranteeNew || !isUnlocked(sk)));
+  // Bei Garantie zählen nur Seltenheiten, von denen es noch einen neuen Skin gibt (Chancen bleiben im Verhältnis gleich)
+  const w = t => (guaranteeNew && avail(t).length === 0) ? 0 : box.odds[t];
+  let r = Math.random() * tiers.reduce((a, t) => a + w(t), 0), tier = tiers.find(t => w(t) > 0) || 'common';
+  for (const t of tiers) { if (r < w(t)) { tier = t; break; } r -= w(t); }
+  const pool = avail(tier);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/**
+ * Zeichnet eine Box (Ursprung = Mitte der Unterkante, etwa 64 breit und 60 hoch).
+ * Zufalls-Box = Geschenk mit Schleife, Gold-Box = Schatztruhe. lid: 0 = zu … 1 = Deckel offen/weg.
+ */
+function drawBoxArt(c, box, lid = 0) {
+  const OUT = '#2d3748';
+  const rr = (x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+  const lin = (y0, y1, c0, c1) => { const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, c0); g.addColorStop(1, c1); return g; };
+  const gem = (x, y, r, col) => {                                    // funkelnder Stein
+    c.fillStyle = col; c.strokeStyle = OUT; c.lineWidth = 1.8;
+    c.beginPath(); c.moveTo(x, y - r); c.lineTo(x + r, y); c.lineTo(x, y + r); c.lineTo(x - r, y); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,0.7)'; c.beginPath(); c.moveTo(x - r * 0.1, y - r * 0.75); c.lineTo(x + r * 0.45, y - r * 0.15); c.lineTo(x - r * 0.1, y - r * 0.1); c.closePath(); c.fill();
+  };
+  c.save();
+  c.lineJoin = 'round'; c.lineCap = 'round'; c.lineWidth = 2.4; c.strokeStyle = OUT;
+  c.fillStyle = 'rgba(0,0,0,0.22)'; c.beginPath(); c.ellipse(0, 1.5, 36, 6, 0, 0, Math.PI * 2); c.fill();   // Schatten
+
+  const beam = () => {                                               // Lichtschein aus der offenen Box
+    if (lid < 0.02) return;
+    const a = Math.min(1, lid * 1.6), top = box.id === 'box2' ? -28 : -32;
+    const g = c.createLinearGradient(0, top, 0, top - 150);
+    g.addColorStop(0, `rgba(255,205,70,${0.8 * a})`); g.addColorStop(1, 'rgba(255,205,70,0)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(-23, top); c.lineTo(23, top); c.lineTo(66, top - 150); c.lineTo(-66, top - 150); c.closePath(); c.fill();
+    c.fillStyle = `rgba(255,243,170,${a})`; c.beginPath(); c.ellipse(0, top, 24, 5.5, 0, 0, Math.PI * 2); c.fill();
+  };
+
+  if (box.id === 'box2') {
+    // ---------- Schatztruhe (Gold-Box) ----------
+    const gold0 = box.colors[0], gold1 = box.colors[1], band = '#a86d00';
+    c.fillStyle = lin(-28, 0, gold0, gold1);
+    rr(-30, -28, 60, 28, 4); c.fill(); c.stroke();                                    // Körper
+    c.fillStyle = band;
+    for (const x of [-25, 19]) { c.fillRect(x, -28, 6, 28); c.strokeRect(x, -28, 6, 28); }  // Eisenbänder
+    c.fillStyle = '#fff3a0';
+    for (const [x, y] of [[-22, -23], [-22, -5], [22, -23], [22, -5]]) { c.beginPath(); c.arc(x, y, 1.6, 0, Math.PI * 2); c.fill(); }
+    c.fillStyle = 'rgba(255,255,255,0.35)'; rr(-16, -24, 5, 18, 2.5); c.fill();        // Glanz
+    beam();
+    // Deckel (seitlich angeschlagen, klappt nach oben)
+    c.save();
+    c.translate(-30, -28); c.rotate(-lid * 1.85); c.translate(30, 0);
+    const lidPath = new Path2D();
+    lidPath.moveTo(-30, 0); lidPath.lineTo(-30, -8); lidPath.quadraticCurveTo(-30, -27, 0, -27);
+    lidPath.quadraticCurveTo(30, -27, 30, -8); lidPath.lineTo(30, 0); lidPath.closePath();
+    c.fillStyle = lin(-27, 0, '#fff0a0', gold0); c.fill(lidPath);
+    c.save(); c.clip(lidPath);
+    c.fillStyle = band; for (const x of [-25, 19]) c.fillRect(x, -30, 6, 32);
+    c.fillStyle = 'rgba(255,255,255,0.4)'; c.beginPath(); c.ellipse(-12, -19, 11, 3.2, -0.3, 0, Math.PI * 2); c.fill();
+    c.restore();
+    c.stroke(lidPath);
+    c.fillStyle = band; rr(-8, -8, 16, 12, 3); c.fill(); c.stroke();                // Schloss
+    c.fillStyle = OUT; c.beginPath(); c.arc(0, -3.5, 2, 0, Math.PI * 2); c.fill(); c.fillRect(-0.9, -3, 1.8, 5);
+    gem(0, -18, 6, '#ff4d6d');
+    c.restore();
+  } else {
+    // ---------- Geschenk (Zufalls-Box) ----------
+    const rib = box.ribbon;
+    c.fillStyle = lin(-32, 0, box.colors[0], box.colors[1]);
+    rr(-26, -32, 52, 32, 5); c.fill(); c.stroke();                                    // Körper
+    c.fillStyle = rib; c.fillRect(-5, -32, 10, 32); c.strokeRect(-5, -32, 10, 32);    // Band
+    c.fillStyle = 'rgba(255,255,255,0.3)'; rr(-22, -28, 5, 20, 2.5); c.fill();        // Glanz
+    c.fillStyle = 'rgba(255,255,255,0.85)';
+    for (const [x, y] of [[-15, -14], [15, -14]]) {                                   // Sternchen
+      c.beginPath();
+      for (let i = 0; i < 10; i++) { const r = i % 2 ? 2.2 : 5, a = -Math.PI / 2 + i * Math.PI / 5; c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); }
+      c.closePath(); c.fill();
+    }
+    beam();
+    // Deckel mit Schleife (hüpft ab und verschwindet)
+    c.save();
+    c.globalAlpha = 1 - Math.min(1, Math.max(0, (lid - 0.5) * 2.2));
+    c.translate(lid * 30, -32 - lid * 82); c.rotate(lid * 0.95);
+    c.fillStyle = lin(-14, 2, '#bfe3ff', box.colors[0]);
+    rr(-31, -14, 62, 16, 4); c.fill(); c.stroke();
+    c.fillStyle = rib; c.fillRect(-5, -14, 10, 16); c.strokeRect(-5, -14, 10, 16);
+    c.fillStyle = 'rgba(255,255,255,0.45)'; rr(-27, -11, 20, 3.5, 1.75); c.fill();
+    c.fillStyle = rib;
+    for (const sg of [-1, 1]) {                                                       // Schleifenbänder
+      c.beginPath(); c.ellipse(sg * 10, -20, 10, 6.5, sg * -0.5, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(sg * 2, -16); c.lineTo(sg * 11, -10); c.lineTo(sg * 6, -9); c.closePath(); c.fill(); c.stroke();
+    }
+    c.beginPath(); c.arc(0, -18, 4.8, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.restore();
+  }
+  c.restore();
+}
+
+/** Box als Symbol im Shop. */
+function drawBoxIcon(cv, box) {
+  const c = cv.getContext('2d');
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.clearRect(0, 0, cv.width, cv.height);
+  const k = cv.width / 80;                                  // Zeichnung ist ca. 80 Einheiten breit
+  c.setTransform(k, 0, 0, k, cv.width / 2, cv.height * 0.9);
+  drawBoxArt(c, box, 0);
+}
+
+/** Reiter "Boxen": zwei Boxen zum Kaufen + Sammlung der sechs Box-Skins. */
+function renderBoxTab() {
+  const all = boxSkins();
+  const full = all.every(isUnlocked);
+  const row = document.createElement('div');
+  row.className = 'box-row';
+  for (const box of BOXES) {
+    const card = document.createElement('button');
+    card.type = 'button'; card.tabIndex = -1;
+    const afford = coinTotal >= box.cost;
+    card.disabled = !afford || full;
+    card.className = 'skin-card shop-card box-card' + (afford && !full ? ' can-buy' : ' locked');
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 128; cv.className = 'boxicon';
+    drawBoxIcon(cv, box); card.append(cv);
+    const name = document.createElement('span'); name.className = 'skin-name'; name.textContent = box.name; card.append(name);
+    const odds = document.createElement('span'); odds.className = 'odds';
+    for (const t of ['common', 'rare', 'epic']) {
+      const o = document.createElement('span'); o.className = 'odd';
+      const d = document.createElement('i'); d.style.background = BOX_TIERS[t].color;
+      o.append(d, box.odds[t] + '%'); odds.append(o);
+    }
+    card.append(odds);
+    const state = document.createElement('span'); state.className = 'skin-state';
+    if (full) state.textContent = 'Alles gesammelt';
+    else {
+      state.classList.add('price');
+      const dot = document.createElement('i'); dot.className = 'coin-dot';
+      state.append(dot, String(box.cost));
+    }
+    card.append(state);
+    card.addEventListener('click', () => buyBox(box));
+    row.append(card);
+  }
+  el.shopGrid.append(row);
+
+  const order = { common: 0, rare: 1, epic: 2 };
+  for (const sk of [...all].sort((a, b) => order[a.box] - order[b.box])) {
+    const own = isUnlocked(sk), tier = BOX_TIERS[sk.box], sel = sk.id === skinId;
+    const card = document.createElement('button');
+    card.type = 'button'; card.tabIndex = -1;
+    card.className = 'skin-card shop-card' + (sel ? ' selected' : '') + (own ? '' : ' locked');
+    if (!sel) card.style.borderColor = tier.color;
+    const cv = document.createElement('canvas'); cv.width = PREVIEW_W * 2; cv.height = PREVIEW_H * 2; cv.className = 'skinprev';
+    drawSkinPreview(cv, sk, own); card.append(cv);
+    const name = document.createElement('span'); name.className = 'skin-name'; name.textContent = own ? sk.name : '???'; card.append(name);
+    const st = document.createElement('span'); st.className = 'skin-state';
+    st.textContent = own ? (sel ? 'Gewählt' : 'Wählen') : tier.name;
+    if (!own) st.style.color = tier.color;
+    card.append(st);
+    card.addEventListener('click', () => { if (!own || boxBusy) return; skinId = sk.id; storeSet(SKIN_KEY, skinId); sfx.select(); renderShop(); });
+    el.shopGrid.append(card);
+  }
+}
+
+/** Box kaufen und öffnen: Münzen abziehen, Skin ziehen, Doppelte geben Münzen zurück. */
+function buyBox(box) {
+  if (boxBusy || coinTotal < box.cost || boxSkins().every(isUnlocked)) return;
+  coinTotal -= box.cost;
+  const guaranteed = boxPity >= BOX_PITY - 1;        // 5. Box ohne neuen Skin → garantiert ein neuer
+  const sk = rollBox(box, guaranteed);
+  const dup = isUnlocked(sk);
+  boxPity = dup ? boxPity + 1 : 0;                   // neuer Skin setzt die Garantie zurück
+  storeSet(PITY_KEY, boxPity);
+  const refund = dup ? BOX_TIERS[sk.box].refund : 0;
+  if (dup) coinTotal += refund;
+  else { owned.push('s:' + sk.id); storeSet(OWNED_KEY, JSON.stringify(owned)); }
+  storeSet(COIN_KEY, coinTotal);
+  showReveal(box, sk, dup, refund);
+  updateMenuInfo();
+  el.shopCoinNum.textContent = fmt(coinTotal);
+}
+
+/* ---- Box-Öffnung: Animation auf einem Canvas ---- */
+let fx = null, fxRaf = 0;
+const FX_DROP = 0.75, FX_BURST = 2.35, FX_TEXT = 3.35;      // Zeitpunkte in Sekunden: Landung, Explosion, Text
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeOutBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const easeOutBounce = t => {
+  const n = 7.5625, d = 2.75;
+  if (t < 1 / d) return n * t * t;
+  if (t < 2 / d) return n * (t -= 1.5 / d) * t + 0.75;
+  if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + 0.9375;
+  return n * (t -= 2.625 / d) * t + 0.984375;
+};
+const CONFETTI_COLORS = {
+  common: ['#3f9d55', '#8fe09f', '#ff9f43', '#ffd23f'],
+  rare:   ['#3b82f6', '#8ec5ff', '#ff9f43', '#ffd23f', '#6ee7ff'],
+  epic:   ['#a855f7', '#e9b3ff', '#ff6ec7', '#ffd23f', '#6ee7ff', '#ff9f43']
+};
+
+function star4(c, x, y, r, rot = 0) {
+  c.beginPath();
+  for (let i = 0; i < 8; i++) { const a = rot + i * Math.PI / 4, rr = i % 2 ? r * 0.36 : r; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  c.closePath();
+}
+
+function addConfetti(n, fromTop) {
+  const cols = CONFETTI_COLORS[fx.sk.box], cx = W / 2, cy = H * 0.5;
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), sp = rand(120, 520);
+    fx.confetti.push(fromTop
+      ? { x: rand(0, W), y: -10, vx: rand(-30, 30), vy: rand(40, 140), rot: rand(0, 6), vr: rand(-8, 8), w: rand(5, 10), h: rand(3, 6), col: cols[i % cols.length] }
+      : { x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 260, rot: rand(0, 6), vr: rand(-12, 12), w: rand(5, 11), h: rand(3, 7), col: cols[i % cols.length] });
+  }
+}
+
+function showReveal(box, sk, dup, refund) {
+  boxBusy = true; revealReady = false; revealSkinObj = sk;
+  const tier = BOX_TIERS[sk.box];
+  const cssW = wrapper.clientWidth, cssH = wrapper.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  el.revealFx.width = Math.round(cssW * dpr); el.revealFx.height = Math.round(cssH * dpr);
+  el.revealTier.textContent = tier.name;
+  el.revealTier.style.background = tier.color;
+  el.revealTier.style.boxShadow = `0 0 18px ${tier.color}`;
+  el.revealName.textContent = sk.name;
+  el.revealNote.textContent = dup ? `Hast du schon – du bekommst ${refund} Münzen zurück` : 'Neuer Skin!';
+  el.btnRevealEquip.classList.toggle('hidden', sk.id === skinId);
+  el.revealResult.classList.add('hidden');
+  el.reveal.classList.remove('hidden');
+  const sprite = document.createElement('canvas'); sprite.width = PREVIEW_W * 2; sprite.height = PREVIEW_H * 2;
+  fx = { box, sk, tier, t: 0, last: performance.now(), sparkles: [], confetti: [], rings: [], sprite,
+         flash: 0, shake: 0, tick: 0, spark: 0, burst: false, fanfare: false, landed: false, rain: 0 };
+  cancelAnimationFrame(fxRaf);
+  fxRaf = requestAnimationFrame(fxFrame);
+}
+
+function skipReveal() { if (fx && fx.t < FX_BURST - 0.1) fx.t = FX_BURST; }
+
+function fxFrame(now) {
+  if (!fx) return;
+  fxRaf = requestAnimationFrame(fxFrame);
+  const dt = Math.min(0.05, (now - fx.last) / 1000);
+  fx.last = now; fx.t += dt;
+  const t = fx.t, c = el.revealFx.getContext('2d'), tier = fx.tier;
+  const cx = W / 2, groundY = H * 0.64, boxS = 2.1, skinY = H * 0.34;
+
+  // --- Ereignisse ---
+  if (!fx.landed && t >= FX_DROP) { fx.landed = true; sfx.boxLand(); fx.shake = 5; }
+  if (!fx.burst && t >= FX_BURST) {
+    fx.burst = true; fx.flash = 1; fx.shake = 16;
+    addConfetti({ common: 50, rare: 90, epic: 170 }[fx.sk.box], false);
+    fx.rings.push({ age: 0, w: 1 }, { age: -0.12, w: 0.6 });
+    sfx.boxBurst();
+  }
+  if (fx.burst && !fx.fanfare && t >= FX_BURST + 0.45) { fx.fanfare = true; sfx.fanfare({ common: 0, rare: 1, epic: 2 }[fx.sk.box]); }
+  if (!revealReady && t >= FX_TEXT) {
+    revealReady = true;
+    el.revealResult.classList.remove('hidden', 'pop'); void el.revealResult.offsetWidth; el.revealResult.classList.add('pop');
+  }
+
+  // --- Aufladen: Funken und Ticken ---
+  const charge = clamp((t - FX_DROP) / (FX_BURST - FX_DROP), 0, 1);
+  if (t >= FX_DROP && !fx.burst) {
+    fx.spark += dt * (25 + 110 * charge);
+    while (fx.spark >= 1) { fx.spark--; fx.sparkles.push({ a: rand(0, Math.PI * 2), r: rand(110, 190), life: 0, max: rand(0.45, 0.8), s: rand(2.5, 5) }); }
+    fx.tick += dt;
+    if (fx.tick >= 0.3 - 0.2 * charge) { fx.tick = 0; sfx.boxTick(); }
+  }
+  if (fx.burst && fx.sk.box !== 'common' && t < 7) {                 // Konfetti-Regen bei Seltenen
+    fx.rain += dt * (fx.sk.box === 'epic' ? 26 : 12);
+    while (fx.rain >= 1) { fx.rain--; addConfetti(1, true); }
+  }
+  fx.shake *= Math.exp(-6 * dt); fx.flash = Math.max(0, fx.flash - dt * 2.8);
+
+  // --- Zeichnen ---
+  c.setTransform(el.revealFx.width / W, 0, 0, el.revealFx.width / W, 0, 0);
+  c.clearRect(0, 0, W, H);
+  c.save();
+  if (fx.shake > 0.3) c.translate(rand(-fx.shake, fx.shake), rand(-fx.shake, fx.shake));
+
+  // Lichtschein hinter der Box / dem Skin
+  const glowA = fx.burst ? 0.55 : 0.1 + 0.55 * charge * charge;
+  const gy = fx.burst ? skinY : groundY - 60;
+  const gr = c.createRadialGradient(cx, gy, 10, cx, gy, 260);
+  gr.addColorStop(0, fx.burst ? tier.color + '99' : `rgba(255,190,70,${glowA})`);
+  gr.addColorStop(1, 'rgba(0,0,0,0)');
+  c.globalAlpha = fx.burst ? 0.85 : 1; c.fillStyle = gr; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+
+  // Drehende Lichtstrahlen nach der Explosion
+  if (fx.burst) {
+    const ra = clamp((t - FX_BURST) / 0.5, 0, 1) * (fx.sk.box === 'common' ? 0.34 : fx.sk.box === 'rare' ? 0.46 : 0.58);
+    const n = fx.sk.box === 'epic' ? 16 : 12, rot = t * 0.32;
+    c.save(); c.translate(cx, skinY); c.fillStyle = tier.color; c.globalAlpha = ra;
+    for (let i = 0; i < n; i++) {
+      const a = rot + i * Math.PI * 2 / n;
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a - 0.07) * 380, Math.sin(a - 0.07) * 380); c.lineTo(Math.cos(a + 0.07) * 380, Math.sin(a + 0.07) * 380); c.closePath(); c.fill();
+    }
+    c.restore(); c.globalAlpha = 1;
+  }
+
+  // Box (fällt, wackelt, öffnet sich, verschwindet)
+  const boxFade = 1 - clamp((t - FX_TEXT + 0.35) / 0.55, 0, 1);
+  if (boxFade > 0) {
+    let by = groundY, ox = 0, rot = 0, sx = 1, sy = 1;
+    if (t < FX_DROP) by = groundY - 340 * (1 - easeOutBounce(t / FX_DROP));
+    else {
+      const q = Math.max(0, 0.2 * (1 - (t - FX_DROP) / 0.22));       // Aufprall-Quetschen
+      sx = 1 + q; sy = 1 - q;
+      if (!fx.burst) {
+        const amp = 1 + 9 * charge * charge;
+        ox = Math.sin(t * 52) * amp; rot = Math.sin(t * 38) * 0.03 * (0.4 + charge * 2.4);
+        const pulse = 1 + 0.07 * charge * Math.abs(Math.sin(t * (10 + 14 * charge))); sx *= pulse; sy *= pulse;
+      }
+    }
+    const lid = fx.burst ? easeOutCubic(clamp((t - FX_BURST) / 0.55, 0, 1)) : 0;
+    c.save(); c.globalAlpha = boxFade;
+    c.translate(cx + ox, by + (1 - boxFade) * 30); c.rotate(rot); c.scale(boxS * sx, boxS * sy);
+    drawBoxArt(c, fx.box, lid);
+    c.restore();
+  }
+
+  // Skin steigt aus der Box auf
+  if (fx.burst) {
+    const pe = clamp((t - FX_BURST - 0.12) / 0.8, 0, 1);
+    if (pe > 0) {
+      drawSkinPreview(fx.sprite, fx.sk, true);                         // neu zeichnen = Blinzeln, Flügelschlag, Funkeln
+      const e = easeOutBack(pe), y = lerp(groundY - 70, skinY, e) + (pe >= 1 ? Math.sin(t * 2.3) * 5 : 0);
+      const sc = 0.25 + 1.1 * e;
+      c.save(); c.translate(cx, y); c.scale(sc, sc);
+      c.shadowColor = tier.color; c.shadowBlur = 28;
+      c.drawImage(fx.sprite, -PREVIEW_W, -PREVIEW_H * 1.05, PREVIEW_W * 2, PREVIEW_H * 2);
+      c.restore();
+      if (fx.sk.box === 'epic' && pe >= 1) {                           // Funkelsterne um den Skin
+        for (let i = 0; i < 7; i++) {
+          const a = t * 0.9 + i * 0.9, r = 105 + Math.sin(t * 2 + i) * 14, tw = 0.5 + 0.5 * Math.sin(t * 6 + i * 2);
+          c.fillStyle = `rgba(255,176,30,${0.45 + 0.55 * tw})`; star4(c, cx + Math.cos(a) * r, skinY + Math.sin(a) * r * 0.9, 3 + 6 * tw, t); c.fill();
+        }
+      }
+    }
+  }
+
+  // Funken, die in die Box gesaugt werden
+  for (let i = fx.sparkles.length - 1; i >= 0; i--) {
+    const sp = fx.sparkles[i]; sp.life += dt;
+    const k = sp.life / sp.max;
+    if (k >= 1) { fx.sparkles.splice(i, 1); continue; }
+    const r = lerp(sp.r, 15, k * k), a = sp.a + k * 3.2;
+    c.fillStyle = `rgba(250,${170 - 50 * k | 0},20,${1 - k * 0.45})`;
+    star4(c, cx + Math.cos(a) * r, groundY - 55 + Math.sin(a) * r * 0.75, sp.s * (1 - k * 0.4), t * 6); c.fill();
+  }
+
+  // Druckwellen
+  for (let i = fx.rings.length - 1; i >= 0; i--) {
+    const rg = fx.rings[i]; rg.age += dt;
+    if (rg.age < 0) continue;
+    if (rg.age > 0.9) { fx.rings.splice(i, 1); continue; }
+    c.strokeStyle = tier.color; c.globalAlpha = (1 - rg.age / 0.9) * rg.w; c.lineWidth = 12 * (1 - rg.age);
+    c.beginPath(); c.arc(cx, groundY - 55, 20 + easeOutCubic(rg.age / 0.9) * 360, 0, Math.PI * 2); c.stroke();
+  }
+  c.globalAlpha = 1;
+
+  // Konfetti
+  for (let i = fx.confetti.length - 1; i >= 0; i--) {
+    const f = fx.confetti[i];
+    f.vy += 560 * dt; f.vx *= Math.exp(-0.7 * dt); f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt;
+    if (f.y > H + 20) { fx.confetti.splice(i, 1); continue; }
+    c.save(); c.translate(f.x, f.y); c.rotate(f.rot); c.scale(1, Math.abs(Math.cos(f.rot * 1.7)) * 0.85 + 0.15);
+    c.fillStyle = f.col; c.fillRect(-f.w / 2, -f.h / 2, f.w, f.h); c.restore();
+  }
+  c.restore();
+
+  // Blitz
+  if (fx.flash > 0) {
+    c.globalAlpha = fx.flash * 0.55; c.fillStyle = tier.color; c.fillRect(0, 0, W, H);
+    c.globalAlpha = Math.min(1, fx.flash * 0.9); c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+  }
+
+  // Hinweis zum Überspringen
+  if (t < FX_BURST) {
+    c.font = "bold 14px 'Comic Sans MS', 'Chalkboard SE', cursive"; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.fillStyle = `rgba(45,55,72,${0.45 + 0.2 * Math.sin(t * 5)})`; c.fillText('Tippen zum Überspringen', W / 2, H - 28);
+  }
+}
+
+function closeReveal() {
+  if (!revealReady) return;
+  cancelAnimationFrame(fxRaf); fx = null;
+  el.reveal.classList.add('hidden');
+  boxBusy = false; revealReady = false;
+  renderShop(); updateMenuInfo();
+}
+
+function equipRevealed() {
+  if (!revealReady || !revealSkinObj) return;
+  skinId = revealSkinObj.id; storeSet(SKIN_KEY, skinId);
+  sfx.select();
+  closeReveal();
+}
+
 /** Einträge des aktuellen Shop-Reiters. */
 function shopList() {
   if (shopTab === 'abil')  return ABILITIES.map(it => ({ it, cost: it.cost, key: 'a:' + it.id, own: isOwned('a:' + it.id), sel: abilityId === it.id }));
   if (shopTab === 'paper') return PAPERS.map(it => ({ it, cost: it.cost, key: 'p:' + it.id, own: isOwned('p:' + it.id), sel: paperId === it.id }));
-  return SKINS.filter(sk => sk.cost === Infinity).map(it => ({ it, cost: SKIN_COIN_PRICE[it.id] || 0, key: 's:' + it.id, own: isUnlocked(it), sel: skinId === it.id }));
+  return SKINS.filter(sk => sk.cost === Infinity && !sk.box).map(it => ({ it, cost: SKIN_COIN_PRICE[it.id] || 0, key: 's:' + it.id, own: isUnlocked(it), sel: skinId === it.id }));
 }
 
 function renderShop() {
@@ -2033,10 +2533,14 @@ function renderShop() {
   el.tabAbil.classList.toggle('active', abil);
   el.tabPaper.classList.toggle('active', shopTab === 'paper');
   el.tabSkin.classList.toggle('active', shopTab === 'skin');
+  el.tabBox.classList.toggle('active', shopTab === 'box');
   el.shopHint.textContent = abil ? 'Pro Spiel eine Fähigkeit – antippen zum Ausrüsten'
     : shopTab === 'paper' ? 'Das Papier gilt für alle Runden'
+    : shopTab === 'box' ? `Gesammelt: ${boxSkins().filter(isUnlocked).length} / ${boxSkins().length} · Doppelte bringen Münzen`
     : 'Diese Skins gibt es nur hier';
   el.shopGrid.textContent = '';
+  el.shopGrid.classList.toggle('boxmode', shopTab === 'box');   // Boxen-Reiter: alles sichtbar, ohne Scrollen
+  if (shopTab === 'box') { renderBoxTab(); return; }
 
   for (const entry of shopList()) {
     const { it, cost, own, sel } = entry;
@@ -2119,16 +2623,20 @@ function openShop() {
 }
 
 function closeShop() {
-  if (game.state !== 'shop') return;
+  if (game.state !== 'shop' || boxBusy) return;
   game.state = game.shopFrom;
   showScreen(game.state === 'start' ? 'start' : 'over');
 }
 
 function handleShopKey(e) {
+  if (boxBusy) {                                     // Box wird gerade geöffnet
+    if (['Space', 'Enter', 'Escape'].includes(e.code)) { e.preventDefault(); if (!e.repeat) { if (revealReady) closeReveal(); else skipReveal(); } }
+    return;
+  }
   switch (e.code) {
     case 'ArrowLeft': case 'KeyA': case 'ArrowRight': case 'KeyD':
       e.preventDefault();
-      { const tabs = ['abil', 'paper', 'skin'], d = (e.code === 'ArrowLeft' || e.code === 'KeyA') ? -1 : 1;
+      { const tabs = ['abil', 'paper', 'skin', 'box'], d = (e.code === 'ArrowLeft' || e.code === 'KeyA') ? -1 : 1;
         shopTab = tabs[(tabs.indexOf(shopTab) + d + tabs.length) % tabs.length]; renderShop(); }
       break;
     case 'Escape': case 'KeyB': case 'Space': case 'Enter':
