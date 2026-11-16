@@ -110,10 +110,25 @@
         <button id="tab-abil" class="btn-small" type="button" tabindex="-1">Fähigkeiten</button>
         <button id="tab-paper" class="btn-small" type="button" tabindex="-1">Papier</button>
         <button id="tab-skin" class="btn-small" type="button" tabindex="-1">Skins</button>
+        <button id="tab-box" class="btn-small" type="button" tabindex="-1">Boxen</button>
       </div>
       <p id="shop-hint" class="small"></p>
       <div id="shop-grid"></div>
       <button id="btn-shop-close" class="btn-small" type="button" tabindex="-1">Zurück</button>
+
+      <!-- Box-Öffnung -->
+      <div id="box-reveal" class="reveal hidden">
+        <canvas id="reveal-fx"></canvas>
+        <div id="reveal-result" class="hidden">
+          <span id="reveal-tier" class="tier-tag"></span>
+          <h3 id="reveal-name"></h3>
+          <p id="reveal-note"></p>
+          <div class="btn-row">
+            <button id="btn-reveal-equip" class="btn-small" type="button" tabindex="-1">Ausrüsten</button>
+            <button id="btn-reveal-close" class="btn-small" type="button" tabindex="-1">Weiter</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
