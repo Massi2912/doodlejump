@@ -587,3 +587,18 @@ kbd {
 #shop-grid.boxmode .skin-card.shop-card canvas.boxicon { width: calc(var(--u) * 38); height: calc(var(--u) * 38); }
 #shop-grid.boxmode .shop-card:not(.box-card) { min-height: calc(var(--u) * 80); }
 #shop-grid.boxmode .skin-card.shop-card canvas.skinprev { width: calc(var(--u) * 38); height: calc(var(--u) * 43); }
+
+/* ===== Rekord-Skin (GOAT): ganz unten, zentriert, etwas grösser ===== */
+.skin-card.wide {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(var(--u) * 150);
+  padding: calc(var(--u) * 8) calc(var(--u) * 8) calc(var(--u) * 9);
+  margin-top: calc(var(--u) * 4);
+}
+.skin-card.wide canvas { width: calc(var(--u) * 84); height: calc(var(--u) * 94); }
+.skin-card.wide .skin-name { font-size: calc(var(--u) * 17); }
+.skin-card.wide:not(.locked):not(.selected) {
+  border-color: #d9a516;
+  background: linear-gradient(180deg, #fff8dc, #ffeeb0);
+}
