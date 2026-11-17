@@ -102,7 +102,7 @@ const MARGIN_X = 52;             // roter Rand
 
 // Skins: Alle Punkte aus allen Runden werden zusammengezählt (bleibt im Browser gespeichert).
 // 'cost' = Gesamtpunkte, ab denen der Skin freigeschaltet ist. Hier kannst du die Preise
-// ändern oder neue Skins ergänzen.   top: 'leaves' | 'ears' | 'antenna' | 'bow' | 'crown'
+// ändern oder neue Skins ergänzen.   top: 'leaves' | 'ears' | 'antenna' | 'bow' | 'crown' | 'goat'
 // plat = Plattform-Farben [Füllung, Rand]; move = bewegliche Plattformen (optional, sonst blau)
 const SKINS = [
   { id: 'kritzel', plat: ['#7ed957', '#3f8f2f'], name: 'Kritzel', cost: 0, top: 'leaves',
@@ -123,6 +123,10 @@ const SKINS = [
   { id: 'koenig', plat: ['#ffd84d', '#b8860b'], name: 'Königlich', cost: 25000, top: 'crown',
     body: ['#fff0a8', '#e8b820'], out: '#8a6208', feet: '#d9a516', arm: '#ffe27a',
     belly: 'rgba(255,252,225,0.7)', spot: 'rgba(170,120,10,0.3)', acc: '#ffd23f', acc2: '#e74c3c' },
+  // Rekord-Skin: hs = Highscore, ab dem er freigeschaltet ist (wer den Rekord schon hat, bekommt ihn sofort)
+  { id: 'goat', plat: ['#3d3d47', '#d9a516'], name: 'GOAT', cost: Infinity, hs: 10000, top: 'goat',
+    body: ['#4a4a55', '#1f1f26'], out: '#0a0a0c', feet: '#2a2a31', arm: '#3a3a44',
+    belly: 'rgba(120,120,135,0.35)', spot: 'rgba(255,255,255,0.08)', acc: '#ffd23f', acc2: '#b89b6a' },
   // Nur aus Boxen (Shop) zu bekommen: box = Seltenheit
   { id: 'pirat', plat: ['#a0714a', '#4a2f1a'], name: 'Pirat', cost: Infinity, box: 'common', top: 'pirate',
     body: ['#ffd9b0', '#e09a5a'], out: '#4a2a12', feet: '#3b2a20', arm: '#f0b880',
@@ -322,7 +326,7 @@ function storeSet(key, value) { try { localStorage.setItem(key, String(value)); 
 // Wer schon einen Highscore hat, startet nicht bei null
 let totalPoints = (() => { const v = parseInt(storeGet(TOTAL_KEY), 10); return Number.isFinite(v) ? v : highscore; })();
 const skinById      = id => SKINS.find(s => s.id === id);
-const isUnlocked    = s => totalPoints >= s.cost || isOwned('s:' + s.id);   // Punkte ODER im Shop gekauft
+const isUnlocked    = s => totalPoints >= s.cost || isOwned('s:' + s.id) || !!(s.hs && highscore >= s.hs);   // Punkte, Shop ODER Highscore-Rekord
 const nextLockedSkin = () => SKINS.find(s => s.cost !== Infinity && !isUnlocked(s));
 let skinId = SKINS[0].id;   // gespeicherter Skin wird unten gesetzt (nach 'owned')
 const currentSkin = () => skinById(skinId);
@@ -1565,6 +1569,8 @@ function drawCharacter(p, px, feetY, time, sk) {
     ctx.beginPath(); ctx.ellipse(fx * (fs > 1 ? 1.15 : 1) + f * 2, (up ? -4 : -3) - (fs - 1) * 2, 7 * fs, 3.6 * fs, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
+  if (sk.top === 'goat') drawGoatCape(sk, p, f);       // kleines Cape auf der Rückseite (hinter Armen und Körper)
+
   // Arme: nach oben beim Steigen, seitlich beim Fallen
   const hy = up ? -33 : -15;
   for (const [w, col] of [[5, OUT], [2, sk.arm]]) {
@@ -1637,6 +1643,18 @@ function drawCharacter(p, px, feetY, time, sk) {
     ctx.beginPath(); ctx.arc(0, -20, 30, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
   ctx.restore();
+}
+
+/** GOAT-Cape: klein, nur auf der Seite, von der die Figur weggedreht ist (f = 1 rechts, -1 links). */
+function drawGoatCape(sk, p, facing) {
+  const f = -facing;                                    // Cape hängt auf der Rückseite
+  const lift = clamp(p.vy / 700, -1, 1) * 5;           // beim Fallen flattert die Spitze nach oben, beim Steigen hängt sie
+  ctx.fillStyle = '#17171c'; ctx.strokeStyle = sk.out; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(f * 12, -34);
+  ctx.quadraticCurveTo(f * 23, -27, f * 25, -8 - lift);
+  ctx.quadraticCurveTo(f * 19, -9 - lift * 0.5, f * 12, -7);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
 }
 
 /** Kopfschmuck des Skins. front=false: hinter dem Körper, front=true: davor. */
@@ -1821,6 +1839,51 @@ function drawSkinTop(sk, p, f, front) {
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = sk.acc2;
     ctx.beginPath(); ctx.arc(0, -41, 2.4, 0, Math.PI * 2); ctx.fill();
+  } else if (sk.top === 'goat') {                    // GOAT: Cape, Hörner, Ohren hinten – Müde Lider, Krone, Goldkette vorn
+    if (!front) {
+      ctx.fillStyle = sk.acc2; ctx.lineWidth = 2.5;                                       // Hörner: sitzen im Kopf, Halbmond nach aussen
+      for (const s of [-1, 1]) {
+        const horn = () => {
+          ctx.beginPath(); ctx.moveTo(s * 11, -35); ctx.bezierCurveTo(s * 12, -46, s * 21, -50, s * 26, -43);
+          ctx.bezierCurveTo(s * 22, -45, s * 19, -39, s * 17, -29); ctx.closePath();
+        };
+        horn(); ctx.fill();
+        ctx.save(); horn(); ctx.clip(); ctx.strokeStyle = 'rgba(70,50,20,0.6)'; ctx.lineWidth = 2.2;   // zwei dunkle Streifen
+        ctx.beginPath(); ctx.moveTo(s * 19, -52); ctx.lineTo(s * 19, -30); ctx.moveTo(s * 23, -52); ctx.lineTo(s * 23, -30); ctx.stroke(); ctx.restore();
+        horn(); ctx.stroke();
+      }
+      for (const s of [-1, 1]) {                                                          // Ohren: klein und fein, seitlich abstehend, Grau wie der Körper
+        ctx.fillStyle = '#3d3d48'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(s * 20.5, -31 + sway * 2, 7.2, 3.9, -s * 0.15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.09)';
+        ctx.beginPath(); ctx.ellipse(s * 21, -31.4 + sway * 2, 3.6, 1.5, -s * 0.15, 0, Math.PI * 2); ctx.fill();
+      }
+    } else {
+      if (!p.dead) {                                                                      // müde, halbgeschlossene Lider
+        const exs = [-6 + f * 4, 7 + f * 4];
+        ctx.fillStyle = sk.body[0]; ctx.strokeStyle = sk.out; ctx.lineWidth = 2;
+        for (const ex of exs) {
+          ctx.save(); ctx.beginPath(); ctx.arc(ex, -28, 5.8, 0, Math.PI * 2); ctx.clip();
+          ctx.fillRect(ex - 7, -35, 14, 7);
+          ctx.beginPath(); ctx.moveTo(ex - 7, -28.2); ctx.lineTo(ex + 7, -28.2); ctx.stroke(); ctx.restore();
+        }
+      }
+      ctx.strokeStyle = sk.acc; ctx.lineWidth = 3.2; ctx.lineCap = 'butt';               // Goldkette (Rand dunkel, Kern gold)
+      ctx.strokeStyle = sk.out; ctx.lineWidth = 4.6;
+      ctx.beginPath(); ctx.moveTo(-15, -17); ctx.quadraticCurveTo(0, -3, 15, -17); ctx.stroke();
+      ctx.strokeStyle = sk.acc; ctx.lineWidth = 2.4; ctx.setLineDash([2.2, 1.2]);
+      ctx.beginPath(); ctx.moveTo(-15, -17); ctx.quadraticCurveTo(0, -3, 15, -17); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineCap = 'round';
+      ctx.font = '900 8px Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';   // Anhänger
+      ctx.lineWidth = 2.2; ctx.strokeStyle = sk.out; ctx.strokeText('GOAT', 0, -6.5);
+      ctx.fillStyle = sk.acc; ctx.fillText('GOAT', 0, -6.5);
+      ctx.fillStyle = sk.acc; ctx.strokeStyle = sk.out; ctx.lineWidth = 2.5;              // Krone
+      ctx.beginPath();
+      ctx.moveTo(-12, -37); ctx.lineTo(-14, -52); ctx.lineTo(-6.5, -45); ctx.lineTo(0, -56);
+      ctx.lineTo(6.5, -45); ctx.lineTo(14, -52); ctx.lineTo(12, -37); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f0933a';
+      ctx.beginPath(); ctx.arc(0, -44, 2.4, 0, Math.PI * 2); ctx.fill();
+    }
   }
 }
 
@@ -1917,6 +1980,7 @@ function endGame() {
   game.state = 'over';
   game.overAt = performance.now();
   pointers.clear();
+  const lockedHs = SKINS.filter(s => s.hs && !isUnlocked(s));   // Rekord-Skins, die vor dieser Runde noch gesperrt waren
   if (game.score > highscore) {
     highscore = game.score;
     game.newRecord = true;
@@ -1930,7 +1994,7 @@ function endGame() {
   const before = totalPoints;
   totalPoints += game.score;
   storeSet(TOTAL_KEY, totalPoints);
-  const fresh = SKINS.filter(s => s.cost > before && s.cost <= totalPoints && !isOwned('s:' + s.id));
+  const fresh = SKINS.filter(s => s.cost > before && s.cost <= totalPoints && !isOwned('s:' + s.id)).concat(lockedHs.filter(isUnlocked));
   el.newSkin.textContent = fresh.length ? `Neuer Skin: ${fresh.map(s => s.name).join(', ')}!` : '';
   el.newSkin.classList.toggle('hidden', fresh.length === 0);
   el.overProgress.textContent = progressText();
@@ -1979,14 +2043,15 @@ function renderSkinMenu() {
   el.skinBarFill.style.width = clamp(pct, 0, 100) + '%';
 
   el.skinGrid.textContent = '';
-  for (const sk of SKINS) {
+  // Rekord-Skins (z. B. GOAT) kommen ganz unten, zentriert und etwas grösser
+  for (const sk of [...SKINS.filter(s => !s.hs), ...SKINS.filter(s => s.hs)]) {
     const unlocked = isUnlocked(sk);
     const selected = sk.id === skinId;
     const card = document.createElement('button');
     card.type = 'button';
     card.tabIndex = -1;
     card.disabled = !unlocked;
-    card.className = 'skin-card' + (selected ? ' selected' : '') + (unlocked ? '' : ' locked');
+    card.className = 'skin-card' + (sk.hs ? ' wide' : '') + (selected ? ' selected' : '') + (unlocked ? '' : ' locked');
 
     const cv = document.createElement('canvas');
     cv.width = PREVIEW_W * 2; cv.height = PREVIEW_H * 2;
@@ -1997,7 +2062,7 @@ function renderSkinMenu() {
     name.textContent = sk.name;
     const state = document.createElement('span');
     state.className = 'skin-state';
-    state.textContent = !unlocked ? (sk.cost === Infinity ? (sk.box ? 'Aus Boxen' : 'Im Shop') : `ab ${sk.cost} Pkt.`) : selected ? 'Gewählt' : 'Wählen';
+    state.textContent = !unlocked ? (sk.hs ? `Highscore ${fmt(sk.hs)}` : sk.cost === Infinity ? (sk.box ? 'Aus Boxen' : 'Im Shop') : `ab ${sk.cost} Pkt.`) : selected ? 'Gewählt' : 'Wählen';
 
     card.append(cv, name, state);
     card.addEventListener('click', () => selectSkin(sk.id));
@@ -2524,7 +2589,7 @@ function equipRevealed() {
 function shopList() {
   if (shopTab === 'abil')  return ABILITIES.map(it => ({ it, cost: it.cost, key: 'a:' + it.id, own: isOwned('a:' + it.id), sel: abilityId === it.id }));
   if (shopTab === 'paper') return PAPERS.map(it => ({ it, cost: it.cost, key: 'p:' + it.id, own: isOwned('p:' + it.id), sel: paperId === it.id }));
-  return SKINS.filter(sk => sk.cost === Infinity && !sk.box).map(it => ({ it, cost: SKIN_COIN_PRICE[it.id] || 0, key: 's:' + it.id, own: isUnlocked(it), sel: skinId === it.id }));
+  return SKINS.filter(sk => sk.cost === Infinity && !sk.box && !sk.hs).map(it => ({ it, cost: SKIN_COIN_PRICE[it.id] || 0, key: 's:' + it.id, own: isUnlocked(it), sel: skinId === it.id }));
 }
 
 function renderShop() {
